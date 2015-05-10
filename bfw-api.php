@@ -6,6 +6,8 @@
  * @version 1.0
  */
 
+$Modules->newMod('bfw-api', array('time' => 'now'));
+
 require_once($rootPath.'configs/bfw-api/config.php');
 
 if(!empty($apiUrl) && !empty($apiFile) && !empty($apiClass))
