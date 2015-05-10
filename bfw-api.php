@@ -17,17 +17,21 @@ if(!empty($apiUrl) && !empty($apiFile) && !empty($apiClass))
         $explode_path = explode('/', $request);
         
         $apiMethod = 'index';
-        if(isset($explode_path[1]))
+        if(isset($explode_path[2]))
         {
-            $apiMethod = $explode_path[1];
-            unset($explode_path[1]);
+            $apiMethod = $explode_path[2];
+            unset($explode_path[2]);
         }
         
-        unset($explode_path[0]);
+        unset($explode_path[0], $explode_path[1]);
         $methodParam = implode('/', $explode_path);
         
         $callAPI = true;
-        call_user_func($apiClass.'::'.$apiMethod, $methodParam);
+        require_once($rootPath.'controllers/'.$apiFile);
+        
+        $reflectionMethod = new ReflectionMethod($apiClass, $apiMethod);
+        $reflectionMethod->invoke(new $apiClass, $methodParam);
+        exit;
     }
     
     if($request == $apiFile && $callAPI == false)
