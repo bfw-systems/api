@@ -25,5 +25,13 @@
 		"php": ">=5.3.0",
 		"bulton-fr/bfw": "~2.1"
 	},
-	"minimum-stability": "stable"
+	"minimum-stability": "stable",
+    "autoload":
+    {
+        "psr-4":
+        {
+            "BFWApi\\": "src/class/",
+            "BFWApiInterface\\": "src/interfaces/"
+        }
+    }
 }
