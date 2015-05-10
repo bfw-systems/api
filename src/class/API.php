@@ -1,6 +1,6 @@
 <?php
 /**
- * Classes géant les pages
+ * Classes gérant la base de l'api
  * @author Vermeulen Maxime <bulton.fr@gmail.com>
  * @version 1.0
  */
@@ -8,7 +8,7 @@
 namespace BFWApi;
 
 /**
- * Permet de gérer la vue et de savoir vers quel page envoyer
+ * Permet de gérer l'api
  * @package bfw-controller
  */
 class API implements \BFWApiInterface\IAPI
