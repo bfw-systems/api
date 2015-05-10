@@ -9,7 +9,7 @@ namespace BFWApi;
 
 /**
  * Permet de gérer l'api
- * @package bfw-controller
+ * @package bfw-api
  */
 class API implements \BFWApiInterface\IAPI
 {
