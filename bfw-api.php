@@ -6,39 +6,4 @@
  * @version 1.0
  */
 
-$Modules->newMod('bfw-api', array('time' => 'now'));
-
-require_once($rootPath.'configs/bfw-api/config.php');
-
-if(!empty($apiUrl) && !empty($apiFile) && !empty($apiClass))
-{
-    $callAPI = false;
-    
-    if(strpos($request, $apiUrl) === 0)
-    {
-        $explode_path = explode('/', $request);
-        
-        $apiMethod = 'index';
-        if(isset($explode_path[2]))
-        {
-            $apiMethod = $explode_path[2];
-            unset($explode_path[2]);
-        }
-        
-        unset($explode_path[0], $explode_path[1]);
-        $methodParam = implode('/', $explode_path);
-        
-        $callAPI = true;
-        require_once($rootPath.'controllers/'.$apiFile);
-        
-        $reflectionMethod = new ReflectionMethod($apiClass, $apiMethod);
-        $reflectionMethod->invoke(new $apiClass, $methodParam);
-        exit;
-    }
-    
-    if($request == $apiFile && $callAPI == false)
-    {
-        redirection('/');
-    }
-}
-?>
+$Modules->newMod('bfw-api', array('time' => modulesLoadTime_EndInit));
