@@ -1,6 +1,6 @@
 <?php
 /**
- * Actions à effectuer lors de l'initialisation du module par le framework.
+ * Actions ï¿½ effectuer lors de l'initialisation du module par le framework.
  * @author Vermeulen Maxime <bulton.fr@gmail.com>
  * @package bfw-api
  * @version 1.0
@@ -29,8 +29,8 @@ if(!empty($apiUrl) && !empty($apiFile) && !empty($apiClass))
         $callAPI = true;
         require_once($rootPath.'controllers/'.$apiFile);
         
-        $reflectionMethod = new ReflectionMethod($apiClass, $apiMethod);
-        $reflectionMethod->invoke(new $apiClass, $methodParam);
+        $api = new $apiClass;
+        $api->{$apiMethod}($methodParam);
         exit;
     }
     
