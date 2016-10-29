@@ -1,37 +1,41 @@
 {
 	"name": "bulton-fr/bfw-api",
 	"type": "library",
-	"description": "Gestion d'API avec bfw",
+	"description": "API module for BFW",
 	"keywords": ["api", "module", "bfw"],
 	"homepage": "https://github.com/bulton-fr/bfw-api",
-	"time": "2015-05-10",
+	"time": "2016-10-23",
 	"license": "LGPL-3.0",
-	"authors":
-	[
+	"authors": [
 		{
 			"name": "Vermeulen Maxime / Bulton",
 			"homepage": "http://www.bulton.fr",
 			"email": "bulton.fr@bulton.fr"
 		}
 	],
-	"support":
-	{
+	"support": {
 		"email": "support@bulton.fr",
 		"issues": "https://github.com/bulton-fr/bfw-api/issues",
 		"source": "https://github.com/bulton-fr/bfw-api"
 	},
-	"require":
-	{
-		"php": ">=5.3.0",
-		"bulton-fr/bfw": "~2.2"
+	"require": {
+        "php": ">=5.6.0",
+        "bulton-fr/bfw": "3.0.x-dev",
+		"nikic/fast-route": "v0.7.0",
+        "bulton-fr/php-to-xml": "1.0.0"
 	},
+    "require-dev": {
+        "atoum/atoum": "~2.5"
+    },
 	"minimum-stability": "stable",
-    "autoload":
-    {
-        "psr-4":
-        {
-            "BFWApi\\": "src/class/",
-            "BFWApiInterface\\": "src/interfaces/"
+    "autoload": {
+        "psr-4": {
+            "BfwApi\\": "src/class/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "BfwApi\\test\\unit\\mocks\\": "test/unit/mocks"
         }
     }
 }
