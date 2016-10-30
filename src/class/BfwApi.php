@@ -51,8 +51,8 @@ class BfwApi implements \SplObserver
      */
     public function addRoutesToCollector(\FastRoute\RouteCollector $router)
     {
-        $urlPrefix = $this->config->getConfig('urlPrefix', 'config');
-        $routes    = $this->config->getConfig('routes', 'routes');
+        $urlPrefix = $this->config->getConfig('urlPrefix', 'config.php');
+        $routes    = $this->config->getConfig('routes', 'routes.php');
         
         foreach ($routes as $slug => $infos) {
             $slug = trim($urlPrefix.$slug);

@@ -29,14 +29,14 @@ class BfwApi extends atoum
         $config = new \BFW\test\unit\mocks\ConfigForceDatas('unit_test');
         
         $config->forceConfig(
-            'config',
+            'config.php',
             (object) [
                 'urlPrefix' =>  '/api'
             ]
         );
         
         $config->forceConfig(
-            'routes',
+            'routes.php',
             (object) [
                 'routes' =>  [
                     '/books' => [
