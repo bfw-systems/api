@@ -30,12 +30,20 @@ class BfwApi implements \SplObserver
     protected $dispatcher;
     
     /**
+     * @var boolean $routeFindByOther If the route for current request has been
+     *  found by an other module. So we not need to search.
+     */
+    protected $routeFindByOther;
+    
+    /**
      * Constructor
      * 
      * @param \BFW\Module $module
      */
     public function __construct(\BFW\Module $module)
     {
+        $this->routeFindByOther = false;
+        
         $this->module = $module;
         $this->config = $module->getConfig();
         
@@ -73,7 +81,9 @@ class BfwApi implements \SplObserver
     
     /**
      * Observer update method
-     * Call run method on action "bfw_run_finish".
+     * Call run method on action "bfw_run_finish" and route has
+     * not been already found.
+     * Update attribute routeFindByOther on action "request_route_find".
      * 
      * @param \SplSubject $subject
      * 
@@ -81,8 +91,15 @@ class BfwApi implements \SplObserver
      */
     public function update(\SplSubject $subject)
     {
-        if ($subject->getAction() === 'bfw_run_finish') {
+        if (
+            $subject->getAction() === 'bfw_run_finish'
+            && $this->routeFindByOther === false
+        ) {
             $this->run();
+        }
+        
+        if ($subject->getAction() === 'request_route_find') {
+            $this->routeFindByOther = true;
         }
     }
     
@@ -150,6 +167,8 @@ class BfwApi implements \SplObserver
         }
         
         http_response_code(200);
+        $this->sendNotifyRouteFindToOthers();
+        
         return $routeInfo[1]['className'];
     }
     
@@ -171,5 +190,18 @@ class BfwApi implements \SplObserver
         }
         
         return $httpStatus;
+    }
+    
+    /**
+     * Send to all observer of Application a notify who contains the message
+     * "request_route_find" to say the route for the current request has been
+     * found by us.
+     * 
+     * @return void
+     */
+    protected function sendNotifyRouteFindToOthers()
+    {
+        $app = \BFW\Application::getInstance();
+        $app->notifyAction('request_route_find');
     }
 }

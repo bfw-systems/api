@@ -5,11 +5,18 @@ namespace BfwApi\test\unit;
 use \atoum;
 
 require_once(__DIR__.'/../../../../vendor/autoload.php');
+require_once(__DIR__.'/../../../../vendor/bulton-fr/bfw/test/unit/mocks/src/class/ApplicationForceConfig.php');
+require_once(__DIR__.'/../../../../vendor/bulton-fr/bfw/test/unit/mocks/src/class/Application.php');
 require_once(__DIR__.'/../../../../vendor/bulton-fr/bfw/test/unit/mocks/src/class/ConfigForceDatas.php');
+require_once(__DIR__.'/../../../../vendor/bulton-fr/bfw/test/unit/mocks/src/class/Modules.php');
 require_once(__DIR__.'/../../../../vendor/bulton-fr/bfw/test/unit/mocks/src/class/Module.php');
+
+require_once(__DIR__.'/../../../../vendor/bulton-fr/bfw/test/unit/helpers/Application.php'); //DEV
 
 class BfwApi extends atoum
 {
+    use \BFW\test\helpers\Application;
+    
     /**
      * @var $class : Instance de la class
      */
@@ -22,9 +29,7 @@ class BfwApi extends atoum
      */
     public function beforeTestMethod($testMethod)
     {
-        define('CTRL_DIR', 'controllers/');
-        define('CONFIG_DIR', 'config/');
-        define('MODULES_DIR', 'modules/');
+        $this->initApp('');
         
         $config = new \BFW\test\unit\mocks\ConfigForceDatas('unit_test');
         
@@ -89,7 +94,9 @@ class BfwApi extends atoum
             ->object($this->class->config)
                 ->isInstanceOf('\BFW\Config')
             ->object($this->class->dispatcher)
-                ->isInstanceOf('\FastRoute\Dispatcher');
+                ->isInstanceOf('\FastRoute\Dispatcher')
+            ->boolean($this->class->routeFindByOther)
+                ->isFalse();
     }
     
     public function testAddRoutesToCollector()
@@ -275,26 +282,59 @@ class BfwApi extends atoum
                 ->isEqualTo('List of all books.');
     }
     
-    public function testUpdate()
+    public function testUpdateForRun()
     {
-        $this->assert('test BfwApi::update without event')
+        $request = \BFW\Request::getInstance();
+        $subject = new \BFW\Subjects;
+        
+        $this->assert('test BfwApi::update for run without event')
             ->if($this->class->update(new \BFW\Subjects))
             ->then
             ->boolean(http_response_code())
                 ->isFalse();
         
-        $this->assert('test BfwApi::update with event')
+        $this->assert('test BfwApi::update for run without event')
             ->if($_SERVER['REQUEST_URI'] = 'http://bfw.bulton.fr/api/books')
             ->and($_SERVER['REQUEST_METHOD'] = 'GET')
-            ->given($class = $this->class)
-            ->given($subject = new \BFW\Subjects)
+            ->and($request->runDetect())
+            ->and($this->class->setRouteFindByOther(true))
             ->and($subject->setAction('bfw_run_finish'))
             ->then
+            ->given($this->class->update($subject))
+            ->boolean(http_response_code())
+                ->isFalse();
+        
+        $this->assert('test BfwApi::update for run with event')
+            ->if($_SERVER['REQUEST_URI'] = 'http://bfw.bulton.fr/api/books')
+            ->and($_SERVER['REQUEST_METHOD'] = 'GET')
+            ->and($request->runDetect())
+            ->and($this->class->setRouteFindByOther(false))
+            ->and($subject->setAction('bfw_run_finish'))
+            ->then
+            ->given($class = $this->class)
             ->output(function() use ($class, $subject) {
                 $class->update($subject);
             })
                 ->isEqualTo('List of all books.')
             ->integer(http_response_code())
                 ->isEqualTo(200);
+    }
+    
+    public function testUpdateForRouteFindByOther()
+    {
+        $subject = new \BFW\Subjects;
+        
+        $this->assert('test BfwApi::update for routeFindByOther without event')
+            ->if($this->class->update($subject))
+            ->then
+            ->boolean($this->class->routeFindByOther)
+                ->isFalse();
+        
+        $this->assert('test BfwApi::update for routeFindByOther with event')
+            ->if($subject->setAction('request_route_find'))
+            ->and($this->class->update($subject))
+            ->then
+            ->boolean($this->class->routeFindByOther)
+                ->isTrue();
     }
 }

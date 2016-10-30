@@ -9,6 +9,11 @@ class BfwApi extends \BfwApi\BfwApi
         return $this->{$name};
     }
     
+    public function setRouteFindByOther($newValue)
+    {
+        $this->routeFindByOther = $newValue;
+    }
+    
     public function getDispatcher()
     {
         return $this->dispatcher;
