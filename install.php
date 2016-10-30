@@ -1,7 +1,7 @@
 <?php
 
 //Create src/api directory
-echo "\033[1;33m".'Create src/api directory ... '."\033[0m";
+echo " >> \033[0;33m".'Create src/api directory ... '."\033[0m";
 
 if (file_exists(BFW_PATH.'/src/api/')) {
     echo "\033[1;33mAlready exist.\033[0m";
