@@ -194,6 +194,7 @@ abstract class Api
      */
     protected function sendJsonResponse(&$response)
     {
+        header('Content-Type: application/json');
         echo json_encode($response);
     }
     
@@ -206,6 +207,8 @@ abstract class Api
      */
     protected function sendXmlResponse(&$response)
     {
+        header('Content-Type: application/xml');
+        
         $phpToXml = new \bultonFr\PhpToXml\PhpToXml;
         echo $phpToXml->convert($response);
     }
