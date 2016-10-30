@@ -18,4 +18,4 @@ trigger_error(
     'Module '.$this->name.' install error : Fail to create /src/api/ directory',
     E_USER_WARNING
 );
-echo "\033[1;31mFail. \033[0m\n";
+echo "\033[1;31mFail.\033[0m\n";
