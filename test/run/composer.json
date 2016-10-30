@@ -1,0 +1,12 @@
+{
+    "require": {
+        "bulton-fr/bfw": "3.0.x-dev",
+        "bulton-fr/bfw-api": "2.0.x-dev"
+    },
+    "minimum-stability": "RC",
+    "autoload": {
+        "psr-4": {
+            "BfwApi\\test\\run\\": "src/api/"
+        }
+    }
+}

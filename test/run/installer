@@ -1,0 +1,114 @@
+#!/bin/sh
+
+echo '\033[0;33mCheck module\033[0m'
+
+echo '\033[0;33mRemove and create test directory\033[0m'
+rm -rf install
+mkdir -p install
+cp -R composer.json install/
+
+cd install
+
+echo '\033[0;33mGet composer and install dependancies\033[0m'
+curl -sS https://getcomposer.org/installer | php
+php composer.phar install
+
+echo '\033[0;33mBFW Install and module\033[0m'
+./vendor/bin/bfw_install
+./vendor/bin/bfw_installModules
+
+echo -n '\033[0;33mCheck module installed script has been executed ... \033[0m'
+if [ ! -d "$DIRECTORY" ]; then
+    echo '\033[1;32mOK\033[0m'
+else
+    echo '\033[1;31mFail\033[0m'
+    exit 1
+fi
+
+echo '\033[0;33mCopy module test skeleton files\033[0m'
+cd ../
+cp -Rf skeleton/app/* install/app/
+cp -Rf skeleton/src/* install/src/
+
+echo '\033[0;33mRun php integrated web server\033[0m'
+cd install
+php composer.phar update
+php -S localhost:8000 -t web web/index.php &
+
+echo '\033[0;33mWait 5s web server is running\033[0m'
+sleep 5
+
+exitstatus=0
+
+echo '\033[0;33mGet return for /api/books with json format\033[0m'
+wgetreturn=$( wget -qO - http://localhost:8000/api/books?format=json )
+wgetexpected="{\"elements\":{\"elemA\":[{\"elemB\":\"Foo\",\"elemC\":\"Bar\"},{\"elemB\":\"Foz\",\"elemC\":\"Baz\"}]}}"
+
+echo -n '\033[0;33mCheck return ... \033[0m'
+if [ "$wgetreturn" = "$wgetexpected" ] ;then
+    echo '\033[1;32mOK\033[0m'
+else
+    echo '\033[1;31mFail\033[0m'
+    exitstatus=1
+fi
+
+echo '\033[0;33mGet return for /api/books with xml format\033[0m'
+wgetreturn=$( wget -qO - http://localhost:8000/api/books?format=xml )
+wgetexpected="<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<elements>
+ <elemA>
+  <elemB>Foo</elemB>
+  <elemC>Bar</elemC>
+ </elemA>
+ <elemA>
+  <elemB>Foz</elemB>
+  <elemC>Baz</elemC>
+ </elemA>
+</elements>"
+
+echo -n '\033[0;33mCheck return ... \033[0m'
+if [ "$wgetreturn" = "$wgetexpected" ] ;then
+    echo '\033[1;32mOK\033[0m'
+else
+    echo '\033[1;31mFail\033[0m'
+    exitstatus=1
+fi
+
+echo '\033[0;33mGet return for /api/books with PUT method with format\033[0m'
+curlreturn=$( curl -s -X PUT -I http://localhost:8000/api/books?format=json | grep HTTP/1.1 | awk {'print $2'} )
+curlexpected="405"
+
+echo -n '\033[0;33mCheck return ... \033[0m'
+if [ "$curlreturn" = "$curlexpected" ] ;then
+    echo '\033[1;32mOK\033[0m'
+else
+    echo '\033[1;31mFail\033[0m'
+    exitstatus=1
+fi
+
+echo '\033[0;33mGet return for /api/books with GET method without format\033[0m'
+curlreturn=$( curl -s -X GET -I http://localhost:8000/api/books | grep HTTP/1.1 | awk {'print $2'} )
+curlexpected="406"
+
+echo -n '\033[0;33mCheck return ... \033[0m'
+if [ "$curlreturn" = "$curlexpected" ] ;then
+    echo '\033[1;32mOK\033[0m'
+else
+    echo '\033[1;31mFail\033[0m'
+    exitstatus=1
+fi
+
+echo '\033[0;33mGet return for /api/authors with GET method\033[0m'
+curlreturn=$( curl -s -X GET -I http://localhost:8000/api/authors | grep HTTP/1.1 | awk {'print $2'} )
+curlexpected="404"
+
+echo -n '\033[0;33mCheck return ... \033[0m'
+if [ "$curlreturn" = "$curlexpected" ] ;then
+    echo '\033[1;32mOK\033[0m'
+else
+    echo '\033[1;31mFail\033[0m'
+    exitstatus=1
+fi
+
+killall php
+exit "$exitstatus";
