@@ -31,6 +31,7 @@ abstract class Api
     public function __construct()
     {
         $this->obtainsDatasFromRequest();
+        $this->obtainResponseFormat();
     }
     
     /**
