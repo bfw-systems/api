@@ -3,12 +3,12 @@
 //Create src/api directory
 echo ' >> Create src/api directory ... ';
 
-if (file_exists(BFW_PATH.'/src/api/')) {
+if (file_exists(SRC_DIR.'api/')) {
     echo "\033[1;33mAlready exist.\033[0m";
     return;
 }
     
-if (mkdir(BFW_PATH.'/src/api/', 0755)) {
+if (mkdir(SRC_DIR.'api/', 0755)) {
     echo "\033[1;32mCreated.\033[0m\n";
     return;
 }
