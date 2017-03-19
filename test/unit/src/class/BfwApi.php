@@ -3,20 +3,15 @@
 namespace BfwApi\test\unit;
 
 use \atoum;
+use \BFW\test\helpers\ApplicationInit as AppInit;
 
 require_once(__DIR__.'/../../../../vendor/autoload.php');
-require_once(__DIR__.'/../../../../vendor/bulton-fr/bfw/test/unit/mocks/src/class/ApplicationForceConfig.php');
-require_once(__DIR__.'/../../../../vendor/bulton-fr/bfw/test/unit/mocks/src/class/Application.php');
+require_once(__DIR__.'/../../../../vendor/bulton-fr/bfw/test/unit/helpers/ApplicationInit.php');
 require_once(__DIR__.'/../../../../vendor/bulton-fr/bfw/test/unit/mocks/src/class/ConfigForceDatas.php');
-require_once(__DIR__.'/../../../../vendor/bulton-fr/bfw/test/unit/mocks/src/class/Modules.php');
 require_once(__DIR__.'/../../../../vendor/bulton-fr/bfw/test/unit/mocks/src/class/Module.php');
-
-require_once(__DIR__.'/../../../../vendor/bulton-fr/bfw/test/unit/helpers/Application.php'); //DEV
 
 class BfwApi extends atoum
 {
-    use \BFW\test\helpers\Application;
-    
     /**
      * @var $class : Instance de la class
      */
@@ -29,7 +24,9 @@ class BfwApi extends atoum
      */
     public function beforeTestMethod($testMethod)
     {
-        $this->initApp('');
+        AppInit::init([
+            'vendorDir' => __DIR__.'/../../../../vendor'
+        ]);
         
         $config = new \BFW\test\unit\mocks\ConfigForceDatas('unit_test');
         
