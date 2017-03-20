@@ -7,6 +7,7 @@
 namespace BfwApi;
 
 use \Exception;
+use \BFW\Helpers\Secure;
 
 /**
  * Abstract class for API user class
@@ -88,7 +89,7 @@ abstract class Api
     protected function obtainsDatasFromRequest()
     {
         $requestDatas = file_get_contents('php://input');
-        $this->datas  = \BFW\Helpers\Secure::securise(
+        $this->datas  = Secure::securise(
             json_decode($requestDatas, true),
             'string',
             true
@@ -158,7 +159,7 @@ abstract class Api
     protected function obtainResponseFormatFromGetParameter()
     {
         try {
-            $format = \BFW\Helpers\Secure::getSecurisedGetKey('format', 'text');
+            $format = Secure::getSecurisedGetKey('format', 'text');
             
             if ($format !== 'xml' && $format !== 'json') {
                 return null;
