@@ -33,7 +33,9 @@ class BfwApi extends atoum
         $config->forceConfig(
             'config.php',
             (object) [
-                'urlPrefix' =>  '/api'
+                'urlPrefix'  =>  '/api',
+                'useRest'    => true,
+                'useGraphQL' => false
             ]
         );
         
@@ -236,7 +238,7 @@ class BfwApi extends atoum
                 ->hasMessage('className not define for uri /api/author');
     }
     
-    public function testRun()
+    public function testRunExceptions()
     {
         $request = \BFW\Request::getInstance();
         
@@ -261,13 +263,24 @@ class BfwApi extends atoum
                 $class->run();
             })
                 ->hasMessage('Method getRequest not found in class \BfwApi\test\unit\mocks\Editors.');
+
+        $this->assert('test BfwApi::run with spec to use exception')
+            ->if($_SERVER['REQUEST_URI'] = 'http://bfw.bulton.fr/api/books')
+            ->and($_SERVER['REQUEST_METHOD'] = 'GET')
+            ->and($request->runDetect())
+            ->and($this->class->config->updateKey('config.php', 'useRest', false))
+            ->then
+            ->exception(function() {
+                $this->class->run();
+            })
+                ->hasMessage('Please choose between REST and GraphQL in config file.');
     }
     
-    public function testRunWithoutError()
+    public function testRunRest()
     {
         $request = \BFW\Request::getInstance();
         
-        $this->assert('test BfwApi::run without error')
+        $this->assert('test BfwApi::run for REST case')
             ->if($_SERVER['REQUEST_URI'] = 'http://bfw.bulton.fr/api/books')
             ->and($_SERVER['REQUEST_METHOD'] = 'GET')
             ->and($request->runDetect())
@@ -277,6 +290,23 @@ class BfwApi extends atoum
                 $class->run();
             })
                 ->isEqualTo('List of all books.');
+    }
+    
+    public function testRunGraphQL()
+    {
+        $request = \BFW\Request::getInstance();
+        
+        $this->assert('test BfwApi::run for GraphQL case')
+            ->if($_SERVER['REQUEST_URI'] = 'http://bfw.bulton.fr/api/books')
+            ->and($_SERVER['REQUEST_METHOD'] = 'GET')
+            ->and($this->class->config->updateKey('config.php', 'useRest', false))
+            ->and($this->class->config->updateKey('config.php', 'useGraphQL', true))
+            ->and($request->runDetect())
+            ->then
+            ->variable($this->class->run())
+                ->isNull()
+            ->integer(http_response_code())
+                ->isEqualTo(501);
     }
     
     public function testUpdateForRun()

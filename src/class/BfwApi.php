@@ -129,8 +129,30 @@ class BfwApi implements \SplObserver
             );
         }
         
+        $useRest    = $this->config->getConfig('useRest', 'config.php');
+        $useGraphQL = $this->config->getConfig('useGraphQL', 'config.php');
+        
+        if ($useRest === true) {
+            return $this->runRest($className, $method);
+        } elseif ($useGraphQL === true) {
+            return $this->runGraphQL();
+        }
+        
+        throw new Exception(
+            'Please choose between REST and GraphQL in config file.'
+        );
+    }
+    
+    protected function runRest($className, $method)
+    {
         $api = new $className;
         $api->{$method.'Request'}();
+    }
+    
+    protected function runGraphQL()
+    {
+        //Not implement yet
+        http_response_code(501);
     }
     
     /**
