@@ -10,7 +10,7 @@ require_once(__DIR__.'/../../../../vendor/bulton-fr/bfw/test/unit/helpers/Applic
 require_once(__DIR__.'/../../../../vendor/bulton-fr/bfw/test/unit/mocks/src/class/ConfigForceDatas.php');
 require_once(__DIR__.'/../../../../vendor/bulton-fr/bfw/test/unit/mocks/src/class/Module.php');
 
-class Api extends atoum
+class Rest extends atoum
 {
     /**
      * @var $class : Instance de la class
@@ -26,13 +26,13 @@ class Api extends atoum
             'vendorDir' => __DIR__.'/../../../../vendor'
         ]);
         
-        $this->class = new \BfwApi\test\unit\mocks\Api;
+        $this->class = new \BfwApi\test\unit\mocks\Rest;
     }
     
     public function testConstructWithoutDatas()
     {
         $this->assert('test Api::__construct without datas')
-            ->if($this->class = new \BfwApi\test\unit\mocks\Api)
+            ->if($this->class = new \BfwApi\test\unit\mocks\Rest)
             ->then
             ->array($this->class->datas)
                 ->isEmpty();
@@ -50,7 +50,7 @@ class Api extends atoum
         
         $this->assert('test Api::__construct with datas')
             //->if(file_put_contents('php://input', json_encode($inputDatas)))
-            ->and($this->class = new \BfwApi\test\unit\mocks\Api)
+            ->and($this->class = new \BfwApi\test\unit\mocks\Rest)
             ->then
             /*->object($this->class->datas)
                 ->isEqualTo($inputDatas)*/;

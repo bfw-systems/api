@@ -2,7 +2,7 @@
 
 namespace BfwApi\test\run;
 
-class Books extends \BfwApi\Api
+class Books extends \BfwApi\Rest
 {
     public function getRequest()
     {

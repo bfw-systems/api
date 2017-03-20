@@ -2,7 +2,7 @@
 
 namespace BfwApi\test\unit\mocks;
 
-class Api extends \BfwApi\Api
+class Rest extends \BfwApi\Rest
 {
     public function __get($name)
     {

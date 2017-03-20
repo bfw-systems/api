@@ -10,10 +10,10 @@ use \Exception;
 use \BFW\Helpers\Secure;
 
 /**
- * Abstract class for API user class
+ * Abstract class for Rest API user class
  * @package bfw-api
  */
-abstract class Api
+abstract class Rest
 {
     /**
      * @var mixed $datas Datas receive by request
