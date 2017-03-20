@@ -34,7 +34,7 @@ class Api extends atoum
         $this->assert('test Api::__construct without datas')
             ->if($this->class = new \BfwApi\test\unit\mocks\Api)
             ->then
-            ->string($this->class->datas)
+            ->array($this->class->datas)
                 ->isEmpty();
     }
     

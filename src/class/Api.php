@@ -88,12 +88,17 @@ abstract class Api
      */
     protected function obtainsDatasFromRequest()
     {
-        $requestDatas = file_get_contents('php://input');
-        $this->datas  = Secure::securise(
-            json_decode($requestDatas, true),
-            'string',
-            true
-        );
+        if (\BFW\Request::getServerVar('CONTENT-TYPE') === 'application/json')
+        {
+            $requestDatas = file_get_contents('php://input');
+            $this->datas  = Secure::securise(
+                json_decode($requestDatas, true),
+                'string',
+                true
+            );
+        } else {
+            $this->datas = Secure::securise($_POST, 'string', true);
+        }
     }
     
     /**
