@@ -179,8 +179,8 @@ class BfwApi implements \SplObserver
         //Get and send request http status to the controller/router linker
         $httpStatus = $this->checkStatus($routeStatus);
         
+        http_response_code($httpStatus);
         if ($httpStatus !== 200) {
-            http_response_code($httpStatus);
             return;
         }
 
@@ -191,7 +191,6 @@ class BfwApi implements \SplObserver
             throw new Exception('className not define for uri '.$request);
         }
         
-        http_response_code(200);
         $this->sendNotifyRouteFindToOthers();
         
         return $routeInfo[1]['className'];
