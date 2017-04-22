@@ -88,7 +88,7 @@ abstract class Rest
      */
     protected function obtainsDatasFromRequest()
     {
-        if (\BFW\Request::getServerVar('CONTENT-TYPE') === 'application/json')
+        if (\BFW\Request::getServerVar('CONTENT_TYPE') === 'application/json')
         {
             $requestDatas = file_get_contents('php://input');
             $this->datas  = Secure::securise(
