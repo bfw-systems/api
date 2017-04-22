@@ -139,7 +139,7 @@ abstract class Rest
         }
         
         $availableHeader = [
-            'application/xml' => 'xml',
+            'application/xml'  => 'xml',
             'application/json' => 'json'
         ];
         
