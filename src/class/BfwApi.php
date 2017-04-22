@@ -115,6 +115,9 @@ class BfwApi implements \SplObserver
     public function run()
     {
         $className = $this->obtainClassNameForCurrentRoute();
+        if ($className === null) {
+            return;
+        }
         
         //Get current request informations
         $bfwRequest = \BFW\Request::getInstance();
