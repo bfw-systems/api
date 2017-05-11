@@ -7,7 +7,7 @@ use \BFW\test\helpers\ApplicationInit as AppInit;
 
 require_once(__DIR__.'/../../../../vendor/autoload.php');
 require_once(__DIR__.'/../../../../vendor/bulton-fr/bfw/test/unit/helpers/ApplicationInit.php');
-require_once(__DIR__.'/../../../../vendor/bulton-fr/bfw/test/unit/mocks/src/class/ConfigForceDatas.php');
+require_once(__DIR__.'/../../../../vendor/bulton-fr/bfw/test/unit/mocks/src/class/Config.php');
 require_once(__DIR__.'/../../../../vendor/bulton-fr/bfw/test/unit/mocks/src/class/Module.php');
 
 class Rest extends atoum

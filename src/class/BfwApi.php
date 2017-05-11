@@ -47,7 +47,10 @@ class BfwApi implements \SplObserver
         $this->module = $module;
         $this->config = $module->getConfig();
         
-        $this->dispatcher = \FastRoute\simpleDispatcher([$this, 'addRoutesToCollector']);
+        $this->dispatcher = \FastRoute\simpleDispatcher([
+            $this,
+            'addRoutesToCollector'
+        ]);
     }
     
     /**
@@ -59,8 +62,8 @@ class BfwApi implements \SplObserver
      */
     public function addRoutesToCollector(\FastRoute\RouteCollector $router)
     {
-        $urlPrefix = $this->config->getConfig('urlPrefix', 'config.php');
-        $routes    = $this->config->getConfig('routes', 'routes.php');
+        $urlPrefix = $this->config->getValue('urlPrefix', 'config.php');
+        $routes    = $this->config->getValue('routes', 'routes.php');
         
         foreach ($routes as $slug => $infos) {
             $slug = trim($urlPrefix.$slug);
@@ -132,8 +135,8 @@ class BfwApi implements \SplObserver
             );
         }
         
-        $useRest    = $this->config->getConfig('useRest', 'config.php');
-        $useGraphQL = $this->config->getConfig('useGraphQL', 'config.php');
+        $useRest    = $this->config->getValue('useRest', 'config.php');
+        $useGraphQL = $this->config->getValue('useGraphQL', 'config.php');
         
         if ($useRest === true) {
             return $this->runRest($className, $method);

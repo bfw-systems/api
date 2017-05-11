@@ -7,7 +7,7 @@ use \BFW\test\helpers\ApplicationInit as AppInit;
 
 require_once(__DIR__.'/../../../../vendor/autoload.php');
 require_once(__DIR__.'/../../../../vendor/bulton-fr/bfw/test/unit/helpers/ApplicationInit.php');
-require_once(__DIR__.'/../../../../vendor/bulton-fr/bfw/test/unit/mocks/src/class/ConfigForceDatas.php');
+require_once(__DIR__.'/../../../../vendor/bulton-fr/bfw/test/unit/mocks/src/class/Config.php');
 require_once(__DIR__.'/../../../../vendor/bulton-fr/bfw/test/unit/mocks/src/class/Module.php');
 
 class BfwApi extends atoum
@@ -28,7 +28,7 @@ class BfwApi extends atoum
             'vendorDir' => __DIR__.'/../../../../vendor'
         ]);
         
-        $config = new \BFW\test\unit\mocks\ConfigForceDatas('unit_test');
+        $config = new \BFW\test\unit\mocks\Config('unit_test');
         
         $config->forceConfig(
             'config.php',
@@ -74,7 +74,7 @@ class BfwApi extends atoum
         );
         
         $this->module = new \BFW\test\unit\mocks\Module('unit_test', false);
-        $this->module->forceConfig($config);
+        $this->module->setConfig($config);
         
         if ($testMethod === 'testConstruct') {
             return;

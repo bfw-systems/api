@@ -1,6 +1,6 @@
 <?php
 
-$bfwApi = new \BfwApi\BfwApi($module);
+$bfwApi = new \BfwApi\BfwApi($this);
 
 $app = \BFW\Application::getInstance();
 $app->attach($bfwApi);

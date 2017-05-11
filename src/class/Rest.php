@@ -88,7 +88,14 @@ abstract class Rest
      */
     protected function obtainsDatasFromRequest()
     {
-        if (\BFW\Request::getServerVar('CONTENT_TYPE') === 'application/json')
+        try {
+            $contentType = \BFW\Request::getServerValue('CONTENT_TYPE');
+        } catch (\Exception $e) {
+            $this->datas = [];
+            return;
+        }
+        
+        if ($contentType === 'application/json')
         {
             $requestDatas = file_get_contents('php://input');
             $this->datas  = Secure::securise(
@@ -132,9 +139,9 @@ abstract class Rest
      */
     protected function obtainResponseFormatFromAcceptHeader()
     {
-        $acceptHeader = \BFW\Request::getServerVar('HTTP_ACCEPT');
-        
-        if ($acceptHeader === '') {
+        try {
+            $acceptHeader = \BFW\Request::getServerValue('HTTP_ACCEPT');
+        } catch (\Exception $e) {
             return null;
         }
         
