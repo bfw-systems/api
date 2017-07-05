@@ -2,7 +2,8 @@
     "srcPath": "src/",
     "configPath": "config/",
     "configFiles": [
-        "config.php"
+        "config.php",
+        "routes.php"
     ],
     "installScript": "install.php"
 }
