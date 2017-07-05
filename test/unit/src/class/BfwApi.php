@@ -325,7 +325,7 @@ class BfwApi extends atoum
             ->and($_SERVER['REQUEST_METHOD'] = 'GET')
             ->and($request->runDetect())
             ->and($this->class->setRouteFindByOther(true))
-            ->and($subject->setAction('bfw_run_finish'))
+            ->and($subject->addNotification('bfw_run_finish'))
             ->then
             ->given($this->class->update($subject))
             ->boolean(http_response_code())
@@ -336,7 +336,7 @@ class BfwApi extends atoum
             ->and($_SERVER['REQUEST_METHOD'] = 'GET')
             ->and($request->runDetect())
             ->and($this->class->setRouteFindByOther(false))
-            ->and($subject->setAction('bfw_run_finish'))
+            ->and($subject->addNotification('bfw_run_finish'))
             ->then
             ->given($class = $this->class)
             ->output(function() use ($class, $subject) {
@@ -358,7 +358,7 @@ class BfwApi extends atoum
                 ->isFalse();
         
         $this->assert('test BfwApi::update for routeFindByOther with event')
-            ->if($subject->setAction('request_route_find'))
+            ->if($subject->addNotification('request_route_find'))
             ->and($this->class->update($subject))
             ->then
             ->boolean($this->class->routeFindByOther)
