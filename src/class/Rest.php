@@ -32,7 +32,7 @@ abstract class Rest
      */
     public function __construct()
     {
-        $this->obtainsDatasFromRequest();
+        $this->obtainDatasFromRequest();
         $this->obtainResponseFormat();
     }
     
@@ -87,7 +87,7 @@ abstract class Rest
      * 
      * @return void
      */
-    protected function obtainsDatasFromRequest()
+    protected function obtainDatasFromRequest()
     {
         try {
             $contentType = \BFW\Request::getServerValue('CONTENT_TYPE');
