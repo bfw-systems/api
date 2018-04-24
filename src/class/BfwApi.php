@@ -39,6 +39,12 @@ class BfwApi implements \SplObserver
     const ERR_CLASSNAME_NOT_DEFINE_FOR_URI = 2001004;
     
     /**
+     * @const ERR_RUN_REST_NOT_IMPLEMENT_INTERFACE : The class used for the
+     * route in Rest mode not implement the interface
+     */
+    const ERR_RUN_REST_NOT_IMPLEMENT_INTERFACE = 2001005;
+    
+    /**
      * @var \BFW\Module $module The bfw module instance for this module
      */
     protected $module;
@@ -234,6 +240,13 @@ class BfwApi implements \SplObserver
     protected function runRest($className, $method)
     {
         $api = new $className;
+        if ($api instanceof \BfwApi\RestInterface === false) {
+            throw new Exception(
+                'The class '.$className.' not implement \BfwApi\RestInterface',
+                self::ERR_RUN_REST_NOT_IMPLEMENT_INTERFACE
+            );
+        }
+        
         $api->{$method.'Request'}();
     }
     

@@ -14,7 +14,7 @@ use \BFW\Helpers\Secure;
  * Abstract class for Rest API user class
  * @package bfw-api
  */
-abstract class Rest
+abstract class Rest implements RestInterface
 {
     /**
      * @var mixed $datas Datas receive by request
