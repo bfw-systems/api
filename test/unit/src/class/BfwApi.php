@@ -3,34 +3,58 @@
 namespace BfwApi\test\unit;
 
 use \atoum;
-use \BFW\test\helpers\ApplicationInit as AppInit;
 
-require_once(__DIR__.'/../../../../vendor/autoload.php');
-require_once(__DIR__.'/../../../../vendor/bulton-fr/bfw/test/unit/helpers/ApplicationInit.php');
-require_once(__DIR__.'/../../../../vendor/bulton-fr/bfw/test/unit/mocks/src/class/Config.php');
-require_once(__DIR__.'/../../../../vendor/bulton-fr/bfw/test/unit/mocks/src/class/Module.php');
+$vendorPath = realpath(__DIR__.'/../../../../vendor');
+require_once($vendorPath.'/autoload.php');
+require_once($vendorPath.'/bulton-fr/bfw/test/unit/helpers/Application.php');
+require_once($vendorPath.'/bulton-fr/bfw/test/unit/mocks/src/class/Module.php');
+require_once($vendorPath.'/bulton-fr/bfw/test/unit/mocks/src/class/Subject.php');
 
-class BfwApi extends atoum
+class BfwApi extends Atoum
 {
-    /**
-     * @var $class : Instance de la class
-     */
-    protected $class;
+    use \BFW\Test\Helpers\Application;
     
+    protected $mock;
     protected $module;
     
-    /**
-     * Instanciation de la class avant chaque méthode de test
-     */
     public function beforeTestMethod($testMethod)
     {
-        AppInit::init([
-            'vendorDir' => __DIR__.'/../../../../vendor'
+        //Define PHP_SAPI on namespace BFW (mock) to have the methode
+        //BFW\Application::initCtrlRouterLink executed
+        eval('namespace BFW {const PHP_SAPI = \'www\';}');
+        
+        $this->setRootDir(__DIR__.'/../../../..');
+        $this->createApp();
+        $this->app->setRunSteps([
+            [$this->app, 'initCtrlRouterLink'],
+            [$this->app, 'runCtrlRouterLink']
         ]);
+        $this->initApp();
+        $this->createModule();
+        $this->app->run();
         
-        $config = new \BFW\test\unit\mocks\Config('unit_test');
+        if ($testMethod === 'testConstructAndGetters') {
+            return;
+        }
         
-        $config->forceConfig(
+        $this->mockGenerator
+            ->makeVisible('runRest')
+            ->makeVisible('runGraphQL')
+            ->makeVisible('obtainClassNameForCurrentRoute')
+            ->makeVisible('checkStatus')
+            ->generate('BfwApi\BfwApi')
+        ;
+        $this->mock = new \mock\BfwApi\BfwApi($this->module);
+    }
+    
+    protected function createModule()
+    {
+        $this->module = new \BFW\Test\Mock\Module('bfw-api');
+        $config = new \BFW\Config('bfw-api');
+        $this->module->setConfig($config);
+        $this->module->setStatus(true, true);
+        
+        $config->setConfigForFile(
             'config.php',
             (object) [
                 'urlPrefix'  =>  '/api',
@@ -39,7 +63,7 @@ class BfwApi extends atoum
             ]
         );
         
-        $config->forceConfig(
+        $config->setConfigForFile(
             'routes.php',
             (object) [
                 'routes' =>  [
@@ -72,296 +96,384 @@ class BfwApi extends atoum
                 ]
             ]
         );
-        
-        $this->module = new \BFW\test\unit\mocks\Module('unit_test', false);
-        $this->module->setConfig($config);
-        
-        if ($testMethod === 'testConstruct') {
-            return;
-        }
-        
-        $this->class = new \BfwApi\test\unit\mocks\BfwApi($this->module);
     }
     
-    public function testConstructor()
+    public function testConstructAndGetters()
     {
         $this->assert('test BfwApi::__construct')
-            ->if($this->class = new \BfwApi\test\unit\mocks\BfwApi($this->module))
-            ->then
-            ->object($this->class->module)
+            ->object($bfwApi = new \BfwApi\BfwApi($this->module))
+                ->isInstanceOf('\SplObserver')
+        ;
+        
+        $this->assert('test BfwApi::getters')
+            ->object($bfwApi->getModule())
                 ->isIdenticalTo($this->module)
-            ->object($this->class->config)
-                ->isInstanceOf('\BFW\Config')
-            ->object($this->class->dispatcher)
-                ->isInstanceOf('\FastRoute\Dispatcher')
-            ->boolean($this->class->routeFindByOther)
-                ->isFalse();
+            ->object($bfwApi->getConfig())
+                ->isIdenticalto($this->module->getConfig())
+            ->object($bfwApi->getDispatcher())
+                //It's in the dependency, so I can't check the class name.
+                //->isInstanceOf('\FastRoute\\Dispatcher\\GroupCountBased')
+        ;
     }
     
     public function testAddRoutesToCollector()
     {
         $this->assert('test BfwApi::addRoutesToCollector')
-            ->if($this->class->setDispatcher(
-                \FastRoute\simpleDispatcher(
-                    [$this->class, 'addRoutesToCollector'],
-                    ['dispatcher' => '\\BfwApi\\test\\unit\\mocks\\Dispatcher']
-                )
+            ->given($routeCollector = new \FastRoute\RouteCollector(
+                new \FastRoute\RouteParser\Std,
+                new \FastRoute\DataGenerator\GroupCountBased
             ))
-            ->given($dispatcher = $this->class->getDispatcher())
-            ->given($staticRouteMap = $dispatcher->staticRouteMap)
-            ->given($variableRouteData = $dispatcher->variableRouteData)
-            
-            ->array($staticRouteMap)
+            ->then
+            ->variable($this->mock->addRoutesToCollector($routeCollector))
+                ->isNull()
+            ->array($routeCollector->getData())
                 ->isEqualTo([
-                    'GET' => [
-                        '/api/books' => [
-                            'className' => '\BfwApi\test\unit\mocks\Books'
-                        ],
-                        '/api/author' => [],
-                        '/api/editors' => [
-                            'className' => '\BfwApi\test\unit\mocks\Editors'
-                        ],
-                        '/api/libraries' => [
-                            'className'  => '\BfwApi\test\unit\mocks\Libraries'
+                    0 => [ //static routes
+                        'GET' => [
+                            '/api/books' => [
+                                'className' => '\BfwApi\test\unit\mocks\Books'
+                            ],
+                            '/api/author' => [],
+                            '/api/editors' => [
+                                'className' => '\BfwApi\test\unit\mocks\Editors'
+                            ],
+                            '/api/libraries' => [
+                                'className'  => '\BfwApi\test\unit\mocks\Libraries'
+                            ]
                         ]
-                    ]
-                ])
-            ->array($variableRouteData)
-                ->isEqualTo([
-                    'GET' => [
-                        0 => [
-                            'regex' => '~^(?|/api/books/(\d+)|/api/books/(\d+)/comments()|/api/books/(\d+)/comments/(\d+)())$~',
-                            'routeMap' => [
-                                2 => [
-                                    0 => ['className' => 'Books'],
-                                    1 => ['bookId' => 'bookId']
-                                ],
-                                3 => [
-                                    0 => ['className' => 'BooksComments'],
-                                    1 => ['bookId' => 'bookId']
-                                ],
-                                4 => [
-                                    0 => ['className' => 'BooksComments'],
-                                    1 => [
-                                        'bookId' => 'bookId',
-                                        'commentId' => 'commentId'
+                    ],
+                    1 => [ //variable routes
+                        'GET' => [
+                            0 => [
+                                'regex' => '~^(?|/api/books/(\d+)|/api/books/(\d+)/comments()|/api/books/(\d+)/comments/(\d+)())$~',
+                                'routeMap' => [
+                                    2 => [
+                                        0 => ['className' => 'Books'],
+                                        1 => ['bookId' => 'bookId']
+                                    ],
+                                    3 => [
+                                        0 => ['className' => 'BooksComments'],
+                                        1 => ['bookId' => 'bookId']
+                                    ],
+                                    4 => [
+                                        0 => ['className' => 'BooksComments'],
+                                        1 => [
+                                            'bookId' => 'bookId',
+                                            'commentId' => 'commentId'
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ],
+                        'POST' => [
+                            0 => [
+                                'regex' => '~^(?|/api/books/(\d+)|/api/books/(\d+)/comments())$~',
+                                'routeMap' => [
+                                    2 => [
+                                        0 => ['className' => 'Books'],
+                                        1 => ['bookId' => 'bookId']
+                                    ],
+                                    3 => [
+                                        0 => ['className' => 'BooksComments'],
+                                        1 => ['bookId' => 'bookId']
+                                    ]
+                                ]
+                            ]
+                        ],
+                        'PUT' => [
+                            0 => [
+                                'regex' => '~^(?|/api/books/(\d+))$~',
+                                'routeMap' => [
+                                    2 => [
+                                        0 => ['className' => 'Books'],
+                                        1 => ['bookId' => 'bookId']
+                                    ]
+                                ]
+                            ]
+                        ],
+                        'DELETE' => [
+                            0 => [
+                                'regex' => '~^(?|/api/books/(\d+))$~',
+                                'routeMap' => [
+                                    2 => [
+                                        0 => ['className' => 'Books'],
+                                        1 => ['bookId' => 'bookId']
                                     ]
                                 ]
                             ]
                         ]
-                    ],
-                    'POST' => [
-                        0 => [
-                            'regex' => '~^(?|/api/books/(\d+)|/api/books/(\d+)/comments())$~',
-                            'routeMap' => [
-                                2 => [
-                                    0 => ['className' => 'Books'],
-                                    1 => ['bookId' => 'bookId']
-                                ],
-                                3 => [
-                                    0 => ['className' => 'BooksComments'],
-                                    1 => ['bookId' => 'bookId']
-                                ]
-                            ]
-                        ]
-                    ],
-                    'PUT' => [
-                        0 => [
-                            'regex' => '~^(?|/api/books/(\d+))$~',
-                            'routeMap' => [
-                                2 => [
-                                    0 => ['className' => 'Books'],
-                                    1 => ['bookId' => 'bookId']
-                                ]
-                            ]
-                        ]
-                    ],
-                    'DELETE' => [
-                        0 => [
-                            'regex' => '~^(?|/api/books/(\d+))$~',
-                            'routeMap' => [
-                                2 => [
-                                    0 => ['className' => 'Books'],
-                                    1 => ['bookId' => 'bookId']
-                                ]
-                            ]
-                        ]
                     ]
-                ]);
+                ])
+        ;
     }
     
-    public function testObtainClassNameForCurrentRoute()
+    public function testUpdate()
     {
-        $request = \BFW\Request::getInstance();
-        
-        $this->assert('test BfwApi::obtainClassNameForCurrentRoute for empty request')
-            ->variable($this->class->callObtainClassNameForCurrentRoute())
+        $this->assert('test BfwApi::update for adding to linker subject')
+            ->given($subject = new \BFW\Test\Mock\Subject)
+            ->and($subject->setAction('bfw_ctrlRouterLink_subject_added'))
+            ->then
+            ->variable($this->mock->update($subject))
                 ->isNull()
-            ->integer(http_response_code())
-                ->isEqualTo(404);
+            ->given($subjectList = \BFW\Application::getInstance()->getSubjectList())
+            ->array($observers = $subjectList->getSubjectForName('ctrlRouterLink')->getObservers())
+                ->contains($this->mock)
+        ;
         
-        $this->assert('test BfwApi::obtainClassNameForCurrentRoute for an existing request')
-            ->if($_SERVER['REQUEST_URI'] = 'http://bfw.bulton.fr/api/books')
-            ->and($_SERVER['REQUEST_METHOD'] = 'GET')
-            ->and($request->runDetect())
-            ->string($this->class->callObtainClassNameForCurrentRoute())
-                ->isEqualTo('\BfwApi\test\unit\mocks\Books')
-            ->integer(http_response_code())
-                ->isEqualTo(200);
-        
-        $this->assert('test BfwApi::obtainClassNameForCurrentRoute for an existing request but uncorrect method')
-            ->if($_SERVER['REQUEST_URI'] = 'http://bfw.bulton.fr/api/books')
-            ->and($_SERVER['REQUEST_METHOD'] = 'PUT')
-            ->and($request->runDetect())
-            ->variable($this->class->callObtainClassNameForCurrentRoute())
+        $this->assert('test BfwApi::update for run system')
+            ->given($subject = new \BFW\Test\Mock\Subject)
+            ->and($subject->setAction('searchRoute'))
+            ->and($subject->setContext($this->app->getCtrlRouterInfos()))
+            ->then
+            ->if($this->calling($this->mock)->run = null)
+            ->then
+            ->variable($this->mock->update($subject))
                 ->isNull()
-            ->integer(http_response_code())
-                ->isEqualTo(405);
-        
-        $this->assert('test BfwApi::obtainClassNameForCurrentRoute for an existing request')
-            ->if($_SERVER['REQUEST_URI'] = 'http://bfw.bulton.fr/api/books')
-            ->and($_SERVER['REQUEST_METHOD'] = 'PUT')
-            ->and($request->runDetect())
-            ->variable($this->class->callObtainClassNameForCurrentRoute())
-                ->isNull()
-            ->integer(http_response_code())
-                ->isEqualTo(405);
-        
-        $this->assert('test BfwApi::obtainClassNameForCurrentRoute for an existing request with an exception')
-            ->if($_SERVER['REQUEST_URI'] = 'http://bfw.bulton.fr/api/author')
-            ->and($_SERVER['REQUEST_METHOD'] = 'GET')
-            ->and($request->runDetect())
-            ->given($class = $this->class)
-            ->exception(function() use ($class) {
-                $class->callObtainClassNameForCurrentRoute();
-            })
-                ->hasMessage('className not define for uri /api/author');
+            ->object($this->mock->getCtrlRouterInfos())
+                ->isIdenticalTo($this->app->getCtrlRouterInfos())
+            ->mock($this->mock)
+                ->call('run')
+                    ->once()
+        ;
     }
     
-    public function testRunExceptions()
+    public function testRun()
     {
-        $request = \BFW\Request::getInstance();
+        $this->assert('test BfwApi::run without class found for route')
+            ->if($this->calling($this->mock)->obtainClassNameForCurrentRoute = null)
+            ->then
+            ->variable($this->mock->run())
+                ->isNull()
+        ;
         
-        $this->assert('test BfwApi::run with class exception')
-            ->if($_SERVER['REQUEST_URI'] = 'http://bfw.bulton.fr/api/libraries')
+        $this->assert('test BfwApi::run - prepare')
+            ->if($this->calling($this->mock)->obtainClassNameForCurrentRoute = '\BfwApi\Test\Helpers\Books')
+            ->and($this->calling($this->mock)->runRest = null)
+            ->and($this->calling($this->mock)->runGraphQL = null)
             ->and($_SERVER['REQUEST_METHOD'] = 'GET')
-            ->and($request->runDetect())
-            ->given($class = $this->class)
-            ->then
-            ->exception(function() use ($class) {
-                $class->run();
-            })
-                ->hasMessage('Class \BfwApi\test\unit\mocks\Libraries not found.');
-
-        $this->assert('test BfwApi::run with method exception')
-            ->if($_SERVER['REQUEST_URI'] = 'http://bfw.bulton.fr/api/editors')
-            ->and($_SERVER['REQUEST_METHOD'] = 'GET')
-            ->and($request->runDetect())
-            ->given($class = $this->class)
-            ->then
-            ->exception(function() use ($class) {
-                $class->run();
-            })
-                ->hasMessage('Method getRequest not found in class \BfwApi\test\unit\mocks\Editors.');
-
-        $this->assert('test BfwApi::run with spec to use exception')
-            ->if($_SERVER['REQUEST_URI'] = 'http://bfw.bulton.fr/api/books')
-            ->and($_SERVER['REQUEST_METHOD'] = 'GET')
-            ->and($request->runDetect())
-            ->and($this->class->config->updateKey('config.php', 'useRest', false))
+            ->and(\BFW\Request::getInstance()->runDetect())
+        ;
+        
+        $this->assert('test BfwApi::run with non existing class')
+            ->if($this->function->class_exists = false)
             ->then
             ->exception(function() {
-                $this->class->run();
+                $this->mock->run();
             })
-                ->hasMessage('Please choose between REST and GraphQL in config file.');
+                ->hasCode(\BfwApi\BfwApi::ERR_RUN_CLASS_NOT_FOUND)
+        ;
+        
+        $this->assert('test BfwApi::run with non existing class')
+            ->and($this->function->class_exists = true)
+            ->and($this->function->method_exists = false)
+            ->then
+            ->exception(function() {
+                $this->mock->run();
+            })
+                ->hasCode(\BfwApi\BfwApi::ERR_RUN_METHOD_NOT_FOUND)
+        ;
+        
+        $this->assert('test BfwApi::run with no mode declared')
+            ->if($this->function->class_exists = true)
+            ->and($this->function->method_exists = true)
+            ->then
+            ->if($this->module->getConfig()->setConfigKeyForFile('config.php', 'useRest', false))
+            ->and($this->module->getConfig()->setConfigKeyForFile('config.php', 'useGraphQL', false))
+            ->then
+            ->exception(function() {
+                $this->mock->run();
+            })
+                ->hasCode(\BfwApi\BfwApi::ERR_RUN_MODE_NOT_DECLARED)
+        ;
+        
+        $this->assert('test BfwApi::run with rest mode')
+            ->if($this->module->getConfig()->setConfigKeyForFile('config.php', 'useRest', true))
+            ->and($this->module->getConfig()->setConfigKeyForFile('config.php', 'useGraphQL', false))
+            ->then
+            ->variable($this->mock->run())
+                ->isNull()
+            ->mock($this->mock)
+                ->call('runRest')
+                    ->withArguments('\BfwApi\Test\Helpers\Books', 'get')
+                    ->once()
+        ;
+        
+        $this->assert('test BfwApi::run with graphQL mode')
+            ->if($this->module->getConfig()->setConfigKeyForFile('config.php', 'useRest', false))
+            ->and($this->module->getConfig()->setConfigKeyForFile('config.php', 'useGraphQL', true))
+            ->then
+            ->variable($this->mock->run())
+                ->isNull()
+            ->mock($this->mock)
+                ->call('runGraphQL')
+                    ->withoutAnyArgument()
+                    ->once()
+        ;
     }
     
     public function testRunRest()
     {
-        $request = \BFW\Request::getInstance();
-        
-        $this->assert('test BfwApi::run for REST case')
-            ->if($_SERVER['REQUEST_URI'] = 'http://bfw.bulton.fr/api/books')
-            ->and($_SERVER['REQUEST_METHOD'] = 'GET')
-            ->and($request->runDetect())
-            ->given($class = $this->class)
-            ->then
-            ->output(function() use ($class) {
-                $class->run();
+        $this->assert('test BfwApi::runRest with implemented method')
+            ->output(function() {
+                $this->mock->runRest('\BfwApi\Test\Helpers\Books', 'get');
             })
-                ->isEqualTo('List of all books.');
+                ->isEqualTo('List of all books.')
+        ;
+        
+        $this->assert('test BfwApi::runRest without implemented class')
+            ->exception(function() {
+                $this->mock->runRest('\BfwApi\Test\Helpers\Editors', 'get');
+            })
+                ->hasCode(\BfwApi\BfwApi::ERR_RUN_REST_NOT_IMPLEMENT_INTERFACE)
+        ;
     }
     
     public function testRunGraphQL()
     {
-        $request = \BFW\Request::getInstance();
-        
-        $this->assert('test BfwApi::run for GraphQL case')
-            ->if($_SERVER['REQUEST_URI'] = 'http://bfw.bulton.fr/api/books')
-            ->and($_SERVER['REQUEST_METHOD'] = 'GET')
-            ->and($this->class->config->updateKey('config.php', 'useRest', false))
-            ->and($this->class->config->updateKey('config.php', 'useGraphQL', true))
-            ->and($request->runDetect())
+        $this->assert('test BfwApi::runGraphQL')
+            ->if($this->function->http_response_code = null)
             ->then
-            ->variable($this->class->run())
+            ->variable($this->mock->runGraphQL())
                 ->isNull()
-            ->integer(http_response_code())
-                ->isEqualTo(501);
+            ->function('http_response_code')
+                ->wasCalledWithArguments(501)
+                    ->atLeastOnce()
+        ;
     }
     
-    public function testUpdateForRun()
+    public function testObtainClassNameForCurrentRoute()
     {
-        $request = \BFW\Request::getInstance();
-        $subject = new \BFW\Subjects;
-        
-        $this->assert('test BfwApi::update for run without event')
-            ->if($this->class->update(new \BFW\Subjects))
-            ->then
-            ->boolean(http_response_code())
-                ->isFalse();
-        
-        $this->assert('test BfwApi::update for run without event')
-            ->if($_SERVER['REQUEST_URI'] = 'http://bfw.bulton.fr/api/books')
+        $this->assert('test BfwApi::obtainClassNameForCurrentRoute - prepare')
+            ->if($this->function->http_response_code = null)
+            ->and($_SERVER['REQUEST_URI'] = '/api/books')
             ->and($_SERVER['REQUEST_METHOD'] = 'GET')
-            ->and($request->runDetect())
-            ->and($this->class->setRouteFindByOther(true))
-            ->and($subject->addNotification('bfw_run_finish'))
+            ->and(\BFW\Request::getInstance()->runDetect())
             ->then
-            ->given($this->class->update($subject))
-            ->boolean(http_response_code())
-                ->isFalse();
+            ->given($subject = new \BFW\Test\Mock\Subject)
+            ->and($subject->setAction('searchRoute'))
+            ->and($subject->setContext($this->app->getCtrlRouterInfos()))
+            ->and($this->calling($this->mock)->run = null)
+            ->and($this->mock->update($subject))
+        ;
         
-        $this->assert('test BfwApi::update for run with event')
-            ->if($_SERVER['REQUEST_URI'] = 'http://bfw.bulton.fr/api/books')
-            ->and($_SERVER['REQUEST_METHOD'] = 'GET')
-            ->and($request->runDetect())
-            ->and($this->class->setRouteFindByOther(false))
-            ->and($subject->addNotification('bfw_run_finish'))
+        $this->assert('test BfwApi::obtainClassNameForCurrentRoute with a 404 route')
+            ->if($this->calling($this->mock)->checkStatus = 404)
+            ->and($this->mock->getCtrlRouterInfos()->isFound = false)
             ->then
-            ->given($class = $this->class)
-            ->output(function() use ($class, $subject) {
-                $class->update($subject);
+            ->variable($this->mock->obtainClassNameForCurrentRoute())
+                ->isNull()
+            ->function('http_response_code')
+                ->never()
+            ->boolean($this->mock->getCtrlRouterInfos()->isFound)
+                ->isFalse()
+        ;
+        
+        $this->assert('test BfwApi::obtainClassNameForCurrentRoute with a 405 route')
+            ->if($this->calling($this->mock)->checkStatus = 405)
+            ->and($this->mock->getCtrlRouterInfos()->isFound = false)
+            ->then
+            ->variable($this->mock->obtainClassNameForCurrentRoute())
+                ->isNull()
+            ->function('http_response_code')
+                ->wasCalledWithArguments(405)
+                    ->once()
+            ->boolean($this->mock->getCtrlRouterInfos()->isFound)
+                ->isTrue()
+        ;
+        
+        $this->assert('test BfwApi::obtainClassNameForCurrentRoute with a 200 route without get parameters')
+            ->if($this->calling($this->mock)->checkStatus = 200)
+            ->and($this->mock->getCtrlRouterInfos()->isFound = false)
+            ->then
+            ->string($this->mock->obtainClassNameForCurrentRoute())
+                ->isEqualTo('\BfwApi\test\unit\mocks\Books')
+            ->function('http_response_code')
+                ->wasCalledWithArguments(200)
+                    ->atLeastOnce()
+            ->boolean($this->mock->getCtrlRouterInfos()->isFound)
+                ->isTrue()
+            ->array($_GET)
+                ->isEmpty()
+        ;
+        
+        $this->assert('test BfwApi::obtainClassNameForCurrentRoute with a 200 route with get parameters')
+            ->if($this->calling($this->mock)->checkStatus = 200)
+            ->and($this->mock->getCtrlRouterInfos()->isFound = false)
+            //->and($_SERVER['REQUEST_URI'] = '/books/{bookId:\d+}/comments/{commentId:\d+}')
+            ->and($_SERVER['REQUEST_URI'] = '/api/books/123/comments/456')
+            ->and($_SERVER['REQUEST_METHOD'] = 'GET')
+            ->and(\BFW\Request::getInstance()->runDetect())
+            ->then
+            ->string($this->mock->obtainClassNameForCurrentRoute())
+                ->isEqualTo('BooksComments')
+            ->function('http_response_code')
+                ->wasCalledWithArguments(200)
+                    ->atLeastOnce()
+            ->boolean($this->mock->getCtrlRouterInfos()->isFound)
+                ->isTrue()
+            ->array($_GET)
+                ->isEqualTo([
+                    'bookId'    => '123',
+                    'commentId' => '456'
+                ])
+        ;
+        
+        $this->assert('test BfwApi::obtainClassNameForCurrentRoute with a 200 route with existing get parameters')
+            ->if($this->calling($this->mock)->checkStatus = 200)
+            ->and($this->mock->getCtrlRouterInfos()->isFound = false)
+            //->and($_SERVER['REQUEST_URI'] = '/books/{bookId:\d+}/comments/{commentId:\d+}')
+            ->and($_SERVER['REQUEST_URI'] = '/api/books/123/comments/456')
+            ->and($_SERVER['REQUEST_METHOD'] = 'GET')
+            ->and(\BFW\Request::getInstance()->runDetect())
+            ->then
+            ->if($_GET = [
+                'limit' => '20'
+            ])
+            ->then
+            ->string($this->mock->obtainClassNameForCurrentRoute())
+                ->isEqualTo('BooksComments')
+            ->function('http_response_code')
+                ->wasCalledWithArguments(200)
+                    ->atLeastOnce()
+            ->boolean($this->mock->getCtrlRouterInfos()->isFound)
+                ->isTrue()
+            ->array($_GET)
+                ->isEqualTo([
+                    'limit'     => '20',
+                    'bookId'    => '123',
+                    'commentId' => '456'
+                ])
+        ;
+        
+        $this->assert('test BfwApi::obtainClassNameForCurrentRoute with a 200 route without classname')
+            ->if($this->calling($this->mock)->checkStatus = 200)
+            ->and($this->mock->getCtrlRouterInfos()->isFound = false)
+            ->and($_SERVER['REQUEST_URI'] = '/api/author')
+            ->and($_SERVER['REQUEST_METHOD'] = 'GET')
+            ->and(\BFW\Request::getInstance()->runDetect())
+            ->then
+            ->exception(function() {
+                $this->mock->obtainClassNameForCurrentRoute();
             })
-                ->isEqualTo('List of all books.')
-            ->integer(http_response_code())
-                ->isEqualTo(200);
+                ->hasCode(\BfwApi\BfwApi::ERR_CLASSNAME_NOT_DEFINE_FOR_URI)
+        ;
     }
     
-    public function testUpdateForRouteFindByOther()
+    public function testCheckStatus()
     {
-        $subject = new \BFW\Subjects;
+        $this->assert('test BfwApi::checkStatus with default value')
+            ->integer($this->mock->checkStatus('atoum'))
+                ->isEqualTo(200)
+        ;
         
-        $this->assert('test BfwApi::update for routeFindByOther without event')
-            ->if($this->class->update($subject))
-            ->then
-            ->boolean($this->class->routeFindByOther)
-                ->isFalse();
+        $this->assert('test BfwApi::checkStatus with no existing route')
+            ->integer($this->mock->checkStatus(\FastRoute\Dispatcher::NOT_FOUND))
+                ->isEqualTo(404)
+        ;
         
-        $this->assert('test BfwApi::update for routeFindByOther with event')
-            ->if($subject->addNotification('request_route_find'))
-            ->and($this->class->update($subject))
-            ->then
-            ->boolean($this->class->routeFindByOther)
-                ->isTrue();
+        $this->assert('test BfwApi::checkStatus with method not allowed for the route')
+            ->integer($this->mock->checkStatus(\FastRoute\Dispatcher::METHOD_NOT_ALLOWED))
+                ->isEqualTo(405)
+        ;
     }
 }

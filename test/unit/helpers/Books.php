@@ -1,14 +1,9 @@
 <?php
 
-namespace BfwApi\test\unit\mocks;
+namespace BfwApi\Test\Helpers;
 
 class Books extends \BfwApi\Rest
 {
-    public function __construct()
-    {
-        
-    }
-    
     public function getRequest()
     {
         echo 'List of all books.';

@@ -3,283 +3,329 @@
 namespace BfwApi\test\unit;
 
 use \atoum;
-use \BFW\test\helpers\ApplicationInit as AppInit;
 
-require_once(__DIR__.'/../../../../vendor/autoload.php');
-require_once(__DIR__.'/../../../../vendor/bulton-fr/bfw/test/unit/helpers/ApplicationInit.php');
-require_once(__DIR__.'/../../../../vendor/bulton-fr/bfw/test/unit/mocks/src/class/Config.php');
-require_once(__DIR__.'/../../../../vendor/bulton-fr/bfw/test/unit/mocks/src/class/Module.php');
+$vendorPath = realpath(__DIR__.'/../../../../vendor');
+require_once($vendorPath.'/autoload.php');
+require_once($vendorPath.'/bulton-fr/bfw/test/unit/helpers/Application.php');
+require_once($vendorPath.'/bulton-fr/bfw/test/unit/mocks/src/class/Module.php');
+require_once($vendorPath.'/bulton-fr/bfw/test/unit/mocks/src/class/Subject.php');
 
-class Rest extends atoum
+class Rest extends Atoum
 {
-    /**
-     * @var $class : Instance de la class
-     */
-    protected $class;
+    use \BFW\Test\Helpers\Application;
     
-    /**
-     * Instanciation de la class avant chaque méthode de test
-     */
+    protected $mock;
+    protected $module;
+    
     public function beforeTestMethod($testMethod)
     {
-        AppInit::init([
-            'vendorDir' => __DIR__.'/../../../../vendor'
-        ]);
+        $this->setRootDir(__DIR__.'/../../../..');
+        $this->createApp();
+        $this->initApp();
         
-        $this->class = new \BfwApi\test\unit\mocks\Rest;
+        if ($testMethod === 'testConstructAndGetters') {
+            return;
+        }
+        
+        $this->mockGenerator
+            ->makeVisible('obtainDatasFromRequest')
+            ->makeVisible('obtainResponseFormat')
+            ->makeVisible('obtainResponseFormatFromAcceptHeader')
+            ->makeVisible('obtainResponseFormatFromGetParameter')
+            ->makeVisible('sendResponse')
+            ->makeVisible('sendJsonResponse')
+            ->makeVisible('sendXmlResponse')
+            ->shunt('__construct')
+            ->generate('BfwApi\Rest')
+        ;
+        
+        $this->mock = new \mock\BfwApi\Rest;
     }
     
-    public function testConstructWithoutDatas()
+    public function testConstruct()
     {
-        $this->assert('test Api::__construct without datas')
-            ->if($this->class = new \BfwApi\test\unit\mocks\Rest)
-            ->then
-            ->array($this->class->datas)
-                ->isEmpty();
-    }
-    
-    /**
-     * @TODO Find a way to mock php://input (stream_wrapper_* function ?)
-     */
-    public function testConstructWithDatas()
-    {
-        $inputDatas = (object) [
-            'name'      => 'foo',
-            'firstName' => 'bar'
-        ];
-        
-        $this->assert('test Api::__construct with datas')
-            //->if(file_put_contents('php://input', json_encode($inputDatas)))
-            ->and($this->class = new \BfwApi\test\unit\mocks\Rest)
-            ->then
-            /*->object($this->class->datas)
-                ->isEqualTo($inputDatas)*/;
+        //Shunted method.
     }
     
     public function testGetRequest()
     {
-        $this->assert('test Api::getRequest')
-            ->if($this->class->getRequest())
-            ->integer(http_response_code())
-                ->isEqualTo(501);
+        $this->assert('test Rest::getRequest')
+            ->if($this->function->http_response_code = null)
+            ->then
+            ->variable($this->mock->getRequest())
+                ->isNull()
+            ->function('http_response_code')
+                ->wasCalledWithArguments(501)
+                    ->once()
+        ;
     }
     
     public function testPostRequest()
     {
-        $this->assert('test Api::postRequest')
-            ->if($this->class->postRequest())
-            ->integer(http_response_code())
-                ->isEqualTo(501);
+        $this->assert('test Rest::postRequest')
+            ->if($this->function->http_response_code = null)
+            ->then
+            ->variable($this->mock->postRequest())
+                ->isNull()
+            ->function('http_response_code')
+                ->wasCalledWithArguments(501)
+                    ->once()
+        ;
     }
     
     public function testPutRequest()
     {
-        $this->assert('test Api::putRequest')
-            ->if($this->class->putRequest())
-            ->integer(http_response_code())
-                ->isEqualTo(501);
+        $this->assert('test Rest::putRequest')
+            ->if($this->function->http_response_code = null)
+            ->then
+            ->variable($this->mock->putRequest())
+                ->isNull()
+            ->function('http_response_code')
+                ->wasCalledWithArguments(501)
+                    ->once()
+        ;
     }
     
     public function testDeleteRequest()
     {
-        $this->assert('test Api::deleteRequest')
-            ->if($this->class->deleteRequest())
-            ->integer(http_response_code())
-                ->isEqualTo(501);
+        $this->assert('test Rest::deleteRequest')
+            ->if($this->function->http_response_code = null)
+            ->then
+            ->variable($this->mock->deleteRequest())
+                ->isNull()
+            ->function('http_response_code')
+                ->wasCalledWithArguments(501)
+                    ->once()
+        ;
     }
     
-    public function testObtainResponseFormatFromAcceptHeader()
+    public function testObtainDatasFromRequestAndGetDates()
     {
-        $this->assert('test Api::obtainResponseFormatFromAcceptHeader without header')
-            ->variable($this->class->callObtainResponseFormatFromAcceptHeader())
-                ->isNull();
+        $this->assert('test Rest::obtainDatasFromRequest without CONTENT_TYPE')
+            ->if($_SERVER = [])
+            ->then
+            ->variable($this->mock->obtainDatasFromRequest())
+                ->isNull()
+            ->array($this->mock->getDatas())
+                ->isEmpty()
+        ;
         
-        $this->assert('test Api::obtainResponseFormatFromAcceptHeader with default browser header')
-            ->if($_SERVER['HTTP_ACCEPT'] = 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8')
-            ->string($this->class->callObtainResponseFormatFromAcceptHeader())
-                ->isEqualTo('xml');
+        $this->assert('test Rest::obtainDatasFromRequest with json type')
+            ->if($_SERVER['CONTENT_TYPE'] = 'application/json')
+            ->and($this->function->file_get_contents = '{"id":123}')
+            ->then
+            ->variable($this->mock->obtainDatasFromRequest())
+                ->isNull()
+            ->array($this->mock->getDatas())
+                ->isEqualTo([
+                    'id' => 123
+                ])
+        ;
         
-        $this->assert('test Api::obtainResponseFormatFromAcceptHeader with xml header with preference')
-            ->if($_SERVER['HTTP_ACCEPT'] = 'application/xml;q=0.9')
-            ->string($this->class->callObtainResponseFormatFromAcceptHeader())
-                ->isEqualTo('xml');
-        
-        $this->assert('test Api::obtainResponseFormatFromAcceptHeader with xml header without preference')
-            ->if($_SERVER['HTTP_ACCEPT'] = 'application/xml')
-            ->string($this->class->callObtainResponseFormatFromAcceptHeader())
-                ->isEqualTo('xml');
-        
-        $this->assert('test Api::obtainResponseFormatFromAcceptHeader with json header without preference')
-            ->if($_SERVER['HTTP_ACCEPT'] = 'application/json')
-            ->string($this->class->callObtainResponseFormatFromAcceptHeader())
-                ->isEqualTo('json');
-        
-        $this->assert('test Api::obtainResponseFormatFromAcceptHeader with html header without preference')
-            ->if($_SERVER['HTTP_ACCEPT'] = 'text/html')
-            ->variable($this->class->callObtainResponseFormatFromAcceptHeader())
-                ->isNull();
-    }
-    
-    public function testObtainResponseFormatFromGetParameter()
-    {
-        $this->assert('test Api::obtainResponseFormatFromGetParameter without get parameter')
-            ->variable($this->class->callObtainResponseFormatFromGetParameter())
-                ->isNull();
-        
-        $this->assert('test Api::obtainResponseFormatFromGetParameter with get parameter to xml')
-            ->if($_GET['format'] = 'xml')
-            ->string($this->class->callObtainResponseFormatFromGetParameter())
-                ->isEqualTo('xml');
-        
-        $this->assert('test Api::obtainResponseFormatFromGetParameter with get parameter to json')
-            ->if($_GET['format'] = 'json')
-            ->string($this->class->callObtainResponseFormatFromGetParameter())
-                ->isEqualTo('json');
-        
-        $this->assert('test Api::obtainResponseFormatFromGetParameter with get parameter to html')
-            ->if($_GET['format'] = 'html')
-            ->variable($this->class->callObtainResponseFormatFromGetParameter())
-                ->isNull();
+        $this->assert('test Rest::obtainDatasFromRequest from POST parameter')
+            ->if($_SERVER['CONTENT_TYPE'] = 'application/xml')
+            ->given($_POST = ['id' => 456])
+            ->then
+            ->variable($this->mock->obtainDatasFromRequest())
+                ->isNull()
+            ->array($this->mock->getDatas())
+                ->isEqualTo([
+                    'id' => 456
+                ])
+        ;
     }
     
     public function testObtainResponseFormat()
     {
-        $this->assert('test Api::obtainResponseFormat without header and get parameter')
-            ->if($this->class->callObtainResponseFormat())
-            ->variable($this->class->responseFormat)
-                ->isNull();
+        $this->assert('test Rest::obtainResponseFormat for unknown format')
+            ->if($this->function->http_response_code = null)
+            ->and($this->calling($this->mock)->obtainResponseFormatFromAcceptHeader = null)
+            ->and($this->calling($this->mock)->obtainResponseFormatFromGetParameter = null)
+            ->then
+            ->variable($this->mock->obtainResponseFormat())
+                ->isNull()
+            ->variable($this->mock->getResponseFormat())
+                ->isNull()
+            ->function('http_response_code')
+                ->wasCalledWithArguments(406)
+                    ->once()
+        ;
         
-        $this->assert('test Api::obtainResponseFormat with only get parameter to json')
-            ->if($_GET['format'] = 'json')
-            ->and($this->class->callObtainResponseFormat())
-            ->string($this->class->responseFormat)
-                ->isEqualTo('json');
+        $this->assert('test Rest::obtainResponseFormat with format in header')
+            ->and($this->calling($this->mock)->obtainResponseFormatFromAcceptHeader = 'json')
+            ->and($this->calling($this->mock)->obtainResponseFormatFromGetParameter = null)
+            ->then
+            ->variable($this->mock->obtainResponseFormat())
+                ->isNull()
+            ->string($this->mock->getResponseFormat())
+                ->isEqualTo('json')
+        ;
         
-        unset($_GET['format']);
-        $this->assert('test Api::obtainResponseFormat with only header to xml')
-            ->if($_SERVER['HTTP_ACCEPT'] = 'application/xml')
-            ->and($this->class->callObtainResponseFormat())
-            ->string($this->class->responseFormat)
-                ->isEqualTo('xml');
+        $this->assert('test Rest::obtainResponseFormat with format in header and GET (use GET)')
+            ->and($this->calling($this->mock)->obtainResponseFormatFromAcceptHeader = 'json')
+            ->and($this->calling($this->mock)->obtainResponseFormatFromGetParameter = 'xml')
+            ->then
+            ->variable($this->mock->obtainResponseFormat())
+                ->isNull()
+            ->string($this->mock->getResponseFormat())
+                ->isEqualTo('xml')
+        ;
+    }
+    
+    public function testObtainResponseFormatFromAcceptHeader()
+    {
+        $this->assert('test Rest::obtainResponseFormatFromAcceptHeader without header info')
+            ->if($_SERVER = [])
+            ->then
+            ->variable($this->mock->obtainResponseFormatFromAcceptHeader())
+                ->isNull()
+        ;
         
-        $this->assert('test Api::obtainResponseFormat with get parameter to xml and header to json')
+        $this->assert('test Rest::obtainResponseFormatFromAcceptHeader without xml or json into info')
+            ->if($_SERVER['HTTP_ACCEPT'] = 'text/html,application/xhtml+xml')
+            ->then
+            ->variable($this->mock->obtainResponseFormatFromAcceptHeader())
+                ->isNull()
+        ;
+        
+        $this->assert('test Rest::obtainResponseFormatFromAcceptHeader with xml')
+            ->if($_SERVER['HTTP_ACCEPT'] = 'text/html,application/xhtml+xml,application/xml;q=0.9')
+            ->then
+            ->string($this->mock->obtainResponseFormatFromAcceptHeader())
+                ->isEqualTo('xml')
+        ;
+        
+        $this->assert('test Rest::obtainResponseFormatFromAcceptHeader with xml and json')
+            ->if($_SERVER['HTTP_ACCEPT'] = 'text/html,application/xhtml+xml,application/json;q=0.9,application/xml;q=0.8')
+            ->then
+            ->string($this->mock->obtainResponseFormatFromAcceptHeader())
+                ->isEqualTo('json')
+        ;
+    }
+    
+    public function testObtainResponseFormatFromGetParameter()
+    {
+        $this->assert('test Rest::obtainResponseFormatFromGetParameter without get datas')
+            ->if($_GET = [])
+            ->then
+            ->variable($this->mock->obtainResponseFormatFromGetParameter())
+                ->isNull()
+        ;
+        
+        $this->assert('test Rest::obtainResponseFormatFromGetParameter with bad get datas')
+            ->if($_GET['format'] = 'html')
+            ->then
+            ->variable($this->mock->obtainResponseFormatFromGetParameter())
+                ->isNull()
+        ;
+        
+        $this->assert('test Rest::obtainResponseFormatFromGetParameter with xml format value')
             ->if($_GET['format'] = 'xml')
-            ->and($_SERVER['HTTP_ACCEPT'] = 'application/json')
-            ->and($this->class->callObtainResponseFormat())
-            ->string($this->class->responseFormat)
-                ->isEqualTo('xml');
+            ->then
+            ->string($this->mock->obtainResponseFormatFromGetParameter())
+                ->isEqualTo('xml')
+        ;
+        
+        $this->assert('test Rest::obtainResponseFormatFromGetParameter with json format value')
+            ->if($_GET['format'] = 'json')
+            ->then
+            ->string($this->mock->obtainResponseFormatFromGetParameter())
+                ->isEqualTo('json')
+        ;
+    }
+    
+    public function testSendResponseWithoutFormatDefined()
+    {
+        $this->assert('test Rest::sendResponse with json format')
+            ->given($response = [])
+            ->if($this->calling($this->mock)->sendJsonResponse = null)
+            ->and($this->calling($this->mock)->sendXmlResponse = null)
+            ->then
+            ->variable($this->mock->sendResponse($response))
+                ->isNull()
+            ->mock($this->mock)
+                ->call('sendJsonResponse')
+                    ->never()
+                ->call('sendXmlResponse')
+                    ->never()
+        ;
+    }
+    
+    public function testSendResponseWithJsonFormat()
+    {
+        $this->assert('test Rest::sendResponse with json format')
+            ->if($_GET['format'] = 'json')
+            ->and($this->mock->obtainResponseFormat())
+            ->then
+            ->string($this->mock->getResponseFormat())
+                ->isEqualTo('json') //Only check to be sure
+            ->then
+            ->given($response = [])
+            ->if($this->calling($this->mock)->sendJsonResponse = null)
+            ->and($this->calling($this->mock)->sendXmlResponse = null)
+            ->then
+            ->variable($this->mock->sendResponse($response))
+                ->isNull()
+            ->mock($this->mock)
+                ->call('sendJsonResponse')
+                    ->once()
+                ->call('sendXmlResponse')
+                    ->never()
+        ;
+    }
+    
+    public function testSendResponseWithXmlFormat()
+    {
+        $this->assert('test Rest::sendResponse with xml format')
+            ->if($_GET['format'] = 'xml')
+            ->and($this->mock->obtainResponseFormat())
+            ->then
+            ->string($this->mock->getResponseFormat())
+                ->isEqualTo('xml') //Only check to be sure
+            ->then
+            ->given($response = [])
+            ->if($this->calling($this->mock)->sendJsonResponse = null)
+            ->and($this->calling($this->mock)->sendXmlResponse = null)
+            ->then
+            ->variable($this->mock->sendResponse($response))
+                ->isNull()
+            ->mock($this->mock)
+                ->call('sendJsonResponse')
+                    ->never()
+                ->call('sendXmlResponse')
+                    ->once()
+        ;
     }
     
     public function testSendJsonResponse()
     {
-        $this->assert('test Api::sendJsonResponse');
-        
-        $class = $this->class;
-        $datas = (object) [
-            'elements' => (object) [
-                'elemA' => [
-                    0 => (object) [
-                        'elemB' => 'Foo',
-                        'elemC' => 'Bar'
-                    ],
-                    1 => (object) [
-                        'elemB' => 'Foz',
-                        'elemC' => 'Baz'
-                    ]
-                ]
-            ]
-        ];
-        
-        $this->output(function() use ($class, $datas) {
-            $class->callSendJsonResponse($datas);
-        })
-            ->isEqualTo('{"elements":{"elemA":[{"elemB":"Foo","elemC":"Bar"},{"elemB":"Foz","elemC":"Baz"}]}}');
+        $this->assert('test Rest::sendJsonResponse')
+            ->if($this->function->header = null)
+            ->then
+            ->output(function() {
+                $response = (object) [];
+                $this->mock->sendJsonResponse($response);
+            })
+                ->isEqualTo('{}')
+            ->function('header')
+                ->wasCalledWithArguments('Content-Type: application/json')
+                    ->once()
+        ;
     }
     
     public function testSendXmlResponse()
     {
-        $this->assert('test Api::sendXmlResponse');
-        
-        $class = $this->class;
-        $datas = (object) [
-            'elements' => (object) [
-                'elemA' => [
-                    0 => (object) [
-                        'elemB' => 'Foo',
-                        'elemC' => 'Bar'
-                    ],
-                    1 => (object) [
-                        'elemB' => 'Foz',
-                        'elemC' => 'Baz'
-                    ]
-                ]
-            ]
-        ];
-        
-        $this->output(function() use ($class, $datas) {
-            $class->callSendXmlResponse($datas);
-        })
-            ->isEqualTo(
-                '<?xml version="1.0" encoding="UTF-8"?>'."\n"
-                .'<elements>'."\n"
-                .' <elemA>'."\n"
-                .'  <elemB>Foo</elemB>'."\n"
-                .'  <elemC>Bar</elemC>'."\n"
-                .' </elemA>'."\n"
-                .' <elemA>'."\n"
-                .'  <elemB>Foz</elemB>'."\n"
-                .'  <elemC>Baz</elemC>'."\n"
-                .' </elemA>'."\n"
-                .'</elements>'."\n"
-            );
-    }
-    
-    public function testSendResponse()
-    {
-        $class = $this->class;
-        $datas = (object) [
-            'elements' => (object) [
-                'elemA' => [
-                    0 => (object) [
-                        'elemB' => 'Foo',
-                        'elemC' => 'Bar'
-                    ],
-                    1 => (object) [
-                        'elemB' => 'Foz',
-                        'elemC' => 'Baz'
-                    ]
-                ]
-            ]
-        ];
-        
-        $this->assert('test Api::sendResponse for xml format')
-            ->if($_GET['format'] = 'xml')
-            ->and($this->class->callObtainResponseFormat())
+        $this->assert('test Rest::sendXmlResponse')
+            ->if($this->function->header = null)
             ->then
-            ->output(function() use ($class, $datas) {
-                $class->callSendResponse($datas);
+            ->output(function() {
+                $response = (object) [];
+                $this->mock->sendXmlResponse($response);
             })
-                ->isEqualTo(
-                    '<?xml version="1.0" encoding="UTF-8"?>'."\n"
-                    .'<elements>'."\n"
-                    .' <elemA>'."\n"
-                    .'  <elemB>Foo</elemB>'."\n"
-                    .'  <elemC>Bar</elemC>'."\n"
-                    .' </elemA>'."\n"
-                    .' <elemA>'."\n"
-                    .'  <elemB>Foz</elemB>'."\n"
-                    .'  <elemC>Baz</elemC>'."\n"
-                    .' </elemA>'."\n"
-                    .'</elements>'."\n"
-                );
-        
-        $this->assert('test Api::sendResponse for json format')
-            ->if($_GET['format'] = 'json')
-            ->and($this->class->callObtainResponseFormat())
-            ->then
-            ->output(function() use ($class, $datas) {
-                $class->callSendResponse($datas);
-            })
-                ->isEqualTo('{"elements":{"elemA":[{"elemB":"Foo","elemC":"Bar"},{"elemB":"Foz","elemC":"Baz"}]}}');
+                ->isEqualTo('<?xml version="1.0" encoding="UTF-8"?>'."\n")
+            ->function('header')
+                ->wasCalledWithArguments('Content-Type: application/xml')
+                    ->once()
+        ;
     }
 }
