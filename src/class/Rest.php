@@ -111,13 +111,12 @@ abstract class Rest
     {
         try {
             $contentType = \BFW\Request::getServerValue('CONTENT_TYPE');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->datas = [];
             return;
         }
         
-        if ($contentType === 'application/json')
-        {
+        if ($contentType === 'application/json') {
             $requestDatas = file_get_contents('php://input');
             $this->datas  = Secure::securise(
                 json_decode($requestDatas, true),
@@ -162,7 +161,7 @@ abstract class Rest
     {
         try {
             $acceptHeader = \BFW\Request::getServerValue('HTTP_ACCEPT');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return null;
         }
         
