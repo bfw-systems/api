@@ -221,12 +221,27 @@ class BfwApi implements \SplObserver
         );
     }
     
+    /**
+     * Call the method for the current request for Rest api mode
+     * 
+     * @param string $className The class name to use for the route
+     * @param string $method The method name to use (get/post/delete/put)
+     * 
+     * @throws Exception If the interface is not implemented by the class
+     * 
+     * @return void
+     */
     protected function runRest($className, $method)
     {
         $api = new $className;
         $api->{$method.'Request'}();
     }
     
+    /**
+     * Call the method for the current request for GraphQL api mode
+     * 
+     * Not implemented yet
+     */
     protected function runGraphQL()
     {
         //Not implement yet
