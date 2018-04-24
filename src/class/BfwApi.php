@@ -15,6 +15,30 @@ use \Exception;
 class BfwApi implements \SplObserver
 {
     /**
+     * @const ERR_RUN_CLASS_NOT_FOUND : Error code if the class to run has
+     * not been found
+     */
+    const ERR_RUN_CLASS_NOT_FOUND = 2001001;
+    
+    /**
+     * @const ERR_RUN_METHOD_NOT_FOUND : Error code if the method to run has
+     * not been found into the class
+     */
+    const ERR_RUN_METHOD_NOT_FOUND = 2001002;
+    
+    /**
+     * @const ERR_RUN_MODE_NOT_DECLARED : Error code if no mode (rest/graphQL)
+     * is declared into config file
+     */
+    const ERR_RUN_MODE_NOT_DECLARED = 2001003;
+    
+    /**
+     * @const ERR_CLASSNAME_NOT_DEFINE_FOR_URI : Error code if the class to use
+     * for current api route is not defined
+     */
+    const ERR_CLASSNAME_NOT_DEFINE_FOR_URI = 2001004;
+    
+    /**
      * @var \BFW\Module $module The bfw module instance for this module
      */
     protected $module;
@@ -170,11 +194,15 @@ class BfwApi implements \SplObserver
         $method     = strtolower($bfwRequest->getMethod());
         
         if (!class_exists($className)) {
-            throw new \Exception('Class '.$className.' not found.');
+            throw new Exception(
+                'Class '.$className.' not found.',
+                self::ERR_RUN_CLASS_NOT_FOUND
+            );
         }
         if (!method_exists($className, $method.'Request')) {
-            throw new \Exception(
-                'Method '.$method.'Request not found in class '.$className.'.'
+            throw new Exception(
+                'Method '.$method.'Request not found in class '.$className.'.',
+                self::ERR_RUN_METHOD_NOT_FOUND
             );
         }
         
@@ -188,7 +216,8 @@ class BfwApi implements \SplObserver
         }
         
         throw new Exception(
-            'Please choose between REST and GraphQL in config file.'
+            'Please choose between REST and GraphQL in config file.',
+            self::ERR_RUN_MODE_NOT_DECLARED
         );
     }
     
@@ -241,7 +270,10 @@ class BfwApi implements \SplObserver
         $_GET = array_merge($_GET, $routeInfo[2]);
         
         if (!isset($routeInfo[1]['className'])) {
-            throw new Exception('className not define for uri '.$request);
+            throw new Exception(
+                'className not define for uri '.$request,
+                self::ERR_CLASSNAME_NOT_DEFINE_FOR_URI
+            );
         }
         
         return $routeInfo[1]['className'];
