@@ -37,6 +37,26 @@ abstract class Rest
     }
     
     /**
+     * Getter accessor for datas property
+     * 
+     * @return miex
+     */
+    public function getDatas()
+    {
+        return $this->datas;
+    }
+
+    /**
+     * Getter accessor for responseFormat property
+     * 
+     * @return string
+     */
+    public function getResponseFormat()
+    {
+        return $this->responseFormat;
+    }
+    
+    /**
      * Method called for GET request
      * 
      * @return void
