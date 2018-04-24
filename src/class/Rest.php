@@ -7,6 +7,7 @@
 namespace BfwApi;
 
 use \Exception;
+use \BFW\Helpers\Http;
 use \BFW\Helpers\Secure;
 
 /**
@@ -171,7 +172,7 @@ abstract class Rest
     protected function obtainResponseFormatFromGetParameter()
     {
         try {
-            $format = Secure::getSecurisedGetKey('format', 'text');
+            $format = Http::obtainGetKey('format', 'text');
             
             if ($format !== 'xml' && $format !== 'json') {
                 return null;

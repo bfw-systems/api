@@ -30,10 +30,10 @@ class BfwApi implements \SplObserver
     protected $dispatcher;
     
     /**
-     * @var boolean $routeFindByOther If the route for current request has been
-     *  found by an other module. So we not need to search.
+     * @var \stdClass|null $ctrlRouterInfos The context object passed to
+     * subject for the action "searchRoute".
      */
-    protected $routeFindByOther;
+    protected $ctrlRouterInfos;
     
     /**
      * Constructor
@@ -42,8 +42,6 @@ class BfwApi implements \SplObserver
      */
     public function __construct(\BFW\Module $module)
     {
-        $this->routeFindByOther = false;
-        
         $this->module = $module;
         $this->config = $module->getConfig();
         
@@ -94,15 +92,20 @@ class BfwApi implements \SplObserver
      */
     public function update(\SplSubject $subject)
     {
-        if (
-            $subject->getAction() === 'bfw_run_finish'
-            && $this->routeFindByOther === false
-        ) {
-            $this->run();
+        if ($subject->getAction() === 'bfw_ctrlRouterLink_subject_added') {
+            $app = \BFW\Application::getInstance();
+            $app->getSubjectList()
+                ->getSubjectForName('ctrlRouterLink')
+                ->attach($this)
+            ;
         }
         
-        if ($subject->getAction() === 'request_route_find') {
-            $this->routeFindByOther = true;
+        if ($subject->getAction() === 'searchRoute') {
+            $this->ctrlRouterInfos = $subject->getContext();
+            
+            if ($this->ctrlRouterInfos->isFound === false) {
+                $this->run();
+            }
         }
     }
     
@@ -182,7 +185,14 @@ class BfwApi implements \SplObserver
         //Get and send request http status to the controller/router linker
         $httpStatus = $this->checkStatus($routeStatus);
         
+        if ($httpStatus === 404) {
+            //404 will be declared by \BFW\Application::runCtrlRouterLink()
+            return;
+        }
+        
         http_response_code($httpStatus);
+        $this->ctrlRouterInfos->isFound = true;
+        
         if ($httpStatus !== 200) {
             return;
         }
@@ -193,8 +203,6 @@ class BfwApi implements \SplObserver
         if (!isset($routeInfo[1]['className'])) {
             throw new Exception('className not define for uri '.$request);
         }
-        
-        $this->sendNotifyRouteFindToOthers();
         
         return $routeInfo[1]['className'];
     }
@@ -217,18 +225,5 @@ class BfwApi implements \SplObserver
         }
         
         return $httpStatus;
-    }
-    
-    /**
-     * Send to all observer of Application a notify who contains the message
-     * "request_route_find" to say the route for the current request has been
-     * found by us.
-     * 
-     * @return void
-     */
-    protected function sendNotifyRouteFindToOthers()
-    {
-        $app = \BFW\Application::getInstance();
-        $app->addNotification('request_route_find');
     }
 }
