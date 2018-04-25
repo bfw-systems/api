@@ -168,9 +168,6 @@ class BfwApi implements \SplObserver
     
     /**
      * Observer update method
-     * Call run method on action "bfw_run_finish" and route has
-     * not been already found.
-     * Update attribute routeFindByOther on action "request_route_find".
      * 
      * @param \SplSubject $subject
      * 
@@ -184,29 +181,30 @@ class BfwApi implements \SplObserver
                 ->getSubjectForName('ctrlRouterLink')
                 ->attach($this)
             ;
-        }
-        
-        if ($subject->getAction() === 'searchRoute') {
+        } elseif ($subject->getAction() === 'searchRoute') {
             $this->ctrlRouterInfos = $subject->getContext();
             
             if ($this->ctrlRouterInfos->isFound === false) {
-                $this->run();
+                $this->searchRoute();
+            }
+        } elseif ($subject->getAction() === 'execRoute') {
+            if (
+                $this->ctrlRouterInfos->isFound === true &&
+                $this->ctrlRouterInfos->forWho === $this->execRouteSystemName
+            ) {
+                $this->execRoute();
             }
         }
     }
     
     /**
-     * Run when the notify "bfw_run_finish" is emit
-     * Check if we are in an API route
-     * If it's an API route,
-     * * Get the class name to use for this route
-     * * Call the method corresponding to request in the class declared
+     * 
      * 
      * @return void
      */
-    public function run()
+    protected function execRoute()
     {
-        $className = $this->obtainClassNameForCurrentRoute();
+        $className = $this->ctrlRouterInfos->target;
         if ($className === null) {
             return;
         }
@@ -227,7 +225,7 @@ class BfwApi implements \SplObserver
                 self::ERR_RUN_METHOD_NOT_FOUND
             );
         }
-        
+    
         $useRest    = $this->config->getValue('useRest', 'config.php');
         $useGraphQL = $this->config->getValue('useGraphQL', 'config.php');
         
@@ -280,11 +278,11 @@ class BfwApi implements \SplObserver
     /**
      * Obtain the classname to use for current route from fastRoute dispatcher
      * 
-     * @return string|void The classname or nothing if error
+     * @return void
      * 
      * @throw \Exception If no "className" is define in config for the route.
      */
-    protected function obtainClassNameForCurrentRoute()
+    protected function searchRoute()
     {
         //Get current request informations
         $bfwRequest = \BFW\Request::getInstance();
@@ -305,6 +303,7 @@ class BfwApi implements \SplObserver
         
         http_response_code($httpStatus);
         $this->ctrlRouterInfos->isFound = true;
+        $this->ctrlRouterInfos->forWho  = $this->execRouteSystemName;
         
         if ($httpStatus !== 200) {
             return;
@@ -320,7 +319,7 @@ class BfwApi implements \SplObserver
             );
         }
         
-        return $routeInfo[1]['className'];
+        $this->ctrlRouterInfos->target = $routeInfo[1]['className'];
     }
     
     /**
