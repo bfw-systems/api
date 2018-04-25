@@ -38,9 +38,11 @@ class BfwApi extends Atoum
         }
         
         $this->mockGenerator
+            ->makeVisible('obtainCtrlRouterInfos')
+            ->makeVisible('searchRoute')
+            ->makeVisible('execRoute')
             ->makeVisible('runRest')
             ->makeVisible('runGraphQL')
-            ->makeVisible('obtainClassNameForCurrentRoute')
             ->makeVisible('checkStatus')
             ->generate('BfwApi\BfwApi')
         ;
@@ -113,6 +115,8 @@ class BfwApi extends Atoum
             ->object($bfwApi->getDispatcher())
                 //It's in the dependency, so I can't check the class name.
                 //->isInstanceOf('\FastRoute\\Dispatcher\\GroupCountBased')
+            ->string($bfwApi->getExecRouteSystemName())
+                ->isEqualTo('bfw-api')
         ;
     }
     
@@ -220,60 +224,86 @@ class BfwApi extends Atoum
                 ->contains($this->mock)
         ;
         
-        $this->assert('test BfwApi::update for run system')
+        $this->assert('test BfwApi::update for searchRoute system')
             ->given($subject = new \BFW\Test\Mock\Subject)
             ->and($subject->setAction('searchRoute'))
             ->and($subject->setContext($this->app->getCtrlRouterInfos()))
             ->then
-            ->if($this->calling($this->mock)->run = null)
+            ->if($this->calling($this->mock)->searchRoute = null)
             ->then
             ->variable($this->mock->update($subject))
                 ->isNull()
             ->object($this->mock->getCtrlRouterInfos())
                 ->isIdenticalTo($this->app->getCtrlRouterInfos())
             ->mock($this->mock)
-                ->call('run')
+                ->call('searchRoute')
+                    ->once()
+        ;
+        
+        $this->assert('test BfwApi::update for searchRoute system')
+            ->given($ctrlRouterInfos = $this->app->getCtrlRouterInfos())
+            ->if($ctrlRouterInfos->isFound = true)
+            ->if($ctrlRouterInfos->forWho = $this->mock->getExecRouteSystemName())
+            ->given($subject = new \BFW\Test\Mock\Subject)
+            ->and($subject->setAction('execRoute'))
+            ->and($subject->setContext($ctrlRouterInfos))
+            ->then
+            ->if($this->calling($this->mock)->execRoute = null)
+            ->then
+            ->variable($this->mock->update($subject))
+                ->isNull()
+            ->object($this->mock->getCtrlRouterInfos())
+                ->isIdenticalTo($this->app->getCtrlRouterInfos())
+            ->mock($this->mock)
+                ->call('execRoute')
                     ->once()
         ;
     }
     
-    public function testRun()
+    public function testExecRoute()
     {
-        $this->assert('test BfwApi::run without class found for route')
-            ->if($this->calling($this->mock)->obtainClassNameForCurrentRoute = null)
+        $this->assert('test BfwApi::execRoute - prepare for all case')
+            ->given($ctrlRouterInfos = $this->app->getCtrlRouterInfos())
+            ->given($subject = new \BFW\Test\Mock\Subject)
+            ->if($subject->setContext($ctrlRouterInfos))
+            ->and($this->mock->obtainCtrlRouterInfos($subject))
+        ;
+        
+        $this->assert('test BfwApi::execRoute without class found for route')
+            ->if($ctrlRouterInfos->target = null)
             ->then
-            ->variable($this->mock->run())
+            ->variable($this->mock->execRoute())
                 ->isNull()
         ;
         
-        $this->assert('test BfwApi::run - prepare')
-            ->if($this->calling($this->mock)->obtainClassNameForCurrentRoute = '\BfwApi\Test\Helpers\Books')
+        $this->assert('test BfwApi::execRoute - prepare')
+            ->if($ctrlRouterInfos->target = '\BfwApi\Test\Helpers\Books')
             ->and($this->calling($this->mock)->runRest = null)
             ->and($this->calling($this->mock)->runGraphQL = null)
             ->and($_SERVER['REQUEST_METHOD'] = 'GET')
             ->and(\BFW\Request::getInstance()->runDetect())
         ;
         
-        $this->assert('test BfwApi::run with non existing class')
+        $this->assert('test BfwApi::execRoute with non existing class')
             ->if($this->function->class_exists = false)
             ->then
             ->exception(function() {
-                $this->mock->run();
+                $this->mock->execRoute();
             })
                 ->hasCode(\BfwApi\BfwApi::ERR_RUN_CLASS_NOT_FOUND)
         ;
         
-        $this->assert('test BfwApi::run with non existing class')
+        $this->assert('test BfwApi::execRoute with non existing class')
             ->and($this->function->class_exists = true)
             ->and($this->function->method_exists = false)
             ->then
             ->exception(function() {
-                $this->mock->run();
+                $this->mock->execRoute();
             })
                 ->hasCode(\BfwApi\BfwApi::ERR_RUN_METHOD_NOT_FOUND)
         ;
         
-        $this->assert('test BfwApi::run with no mode declared')
+        $this->assert('test BfwApi::execRoute with no mode declared')
             ->if($this->function->class_exists = true)
             ->and($this->function->method_exists = true)
             ->then
@@ -281,16 +311,16 @@ class BfwApi extends Atoum
             ->and($this->module->getConfig()->setConfigKeyForFile('config.php', 'useGraphQL', false))
             ->then
             ->exception(function() {
-                $this->mock->run();
+                $this->mock->execRoute();
             })
                 ->hasCode(\BfwApi\BfwApi::ERR_RUN_MODE_NOT_DECLARED)
         ;
         
-        $this->assert('test BfwApi::run with rest mode')
+        $this->assert('test BfwApi::execRoute with rest mode')
             ->if($this->module->getConfig()->setConfigKeyForFile('config.php', 'useRest', true))
             ->and($this->module->getConfig()->setConfigKeyForFile('config.php', 'useGraphQL', false))
             ->then
-            ->variable($this->mock->run())
+            ->variable($this->mock->execRoute())
                 ->isNull()
             ->mock($this->mock)
                 ->call('runRest')
@@ -298,11 +328,11 @@ class BfwApi extends Atoum
                     ->once()
         ;
         
-        $this->assert('test BfwApi::run with graphQL mode')
+        $this->assert('test BfwApi::execRoute with graphQL mode')
             ->if($this->module->getConfig()->setConfigKeyForFile('config.php', 'useRest', false))
             ->and($this->module->getConfig()->setConfigKeyForFile('config.php', 'useGraphQL', true))
             ->then
-            ->variable($this->mock->run())
+            ->variable($this->mock->execRoute())
                 ->isNull()
             ->mock($this->mock)
                 ->call('runGraphQL')
@@ -341,26 +371,25 @@ class BfwApi extends Atoum
         ;
     }
     
-    public function testObtainClassNameForCurrentRoute()
+    public function testSearchRoute()
     {
-        $this->assert('test BfwApi::obtainClassNameForCurrentRoute - prepare')
+        $this->assert('test BfwApi::searchRoute - prepare')
             ->if($this->function->http_response_code = null)
             ->and($_SERVER['REQUEST_URI'] = '/api/books')
             ->and($_SERVER['REQUEST_METHOD'] = 'GET')
             ->and(\BFW\Request::getInstance()->runDetect())
             ->then
+            ->given($ctrlRouterInfos = $this->app->getCtrlRouterInfos())
             ->given($subject = new \BFW\Test\Mock\Subject)
-            ->and($subject->setAction('searchRoute'))
-            ->and($subject->setContext($this->app->getCtrlRouterInfos()))
-            ->and($this->calling($this->mock)->run = null)
-            ->and($this->mock->update($subject))
+            ->if($subject->setContext($ctrlRouterInfos))
+            ->and($this->mock->obtainCtrlRouterInfos($subject))
         ;
         
-        $this->assert('test BfwApi::obtainClassNameForCurrentRoute with a 404 route')
+        $this->assert('test BfwApi::searchRoute with a 404 route')
             ->if($this->calling($this->mock)->checkStatus = 404)
-            ->and($this->mock->getCtrlRouterInfos()->isFound = false)
+            ->and($ctrlRouterInfos->isFound = false)
             ->then
-            ->variable($this->mock->obtainClassNameForCurrentRoute())
+            ->variable($this->mock->searchRoute())
                 ->isNull()
             ->function('http_response_code')
                 ->never()
@@ -368,11 +397,11 @@ class BfwApi extends Atoum
                 ->isFalse()
         ;
         
-        $this->assert('test BfwApi::obtainClassNameForCurrentRoute with a 405 route')
+        $this->assert('test BfwApi::searchRoute with a 405 route')
             ->if($this->calling($this->mock)->checkStatus = 405)
-            ->and($this->mock->getCtrlRouterInfos()->isFound = false)
+            ->and($ctrlRouterInfos->isFound = false)
             ->then
-            ->variable($this->mock->obtainClassNameForCurrentRoute())
+            ->variable($this->mock->searchRoute())
                 ->isNull()
             ->function('http_response_code')
                 ->wasCalledWithArguments(405)
@@ -381,11 +410,13 @@ class BfwApi extends Atoum
                 ->isTrue()
         ;
         
-        $this->assert('test BfwApi::obtainClassNameForCurrentRoute with a 200 route without get parameters')
+        $this->assert('test BfwApi::searchRoute with a 200 route without get parameters')
             ->if($this->calling($this->mock)->checkStatus = 200)
-            ->and($this->mock->getCtrlRouterInfos()->isFound = false)
+            ->and($ctrlRouterInfos->isFound = false)
             ->then
-            ->string($this->mock->obtainClassNameForCurrentRoute())
+            ->variable($this->mock->searchRoute())
+                ->isNull()
+            ->string($ctrlRouterInfos->target)
                 ->isEqualTo('\BfwApi\test\unit\mocks\Books')
             ->function('http_response_code')
                 ->wasCalledWithArguments(200)
@@ -396,15 +427,17 @@ class BfwApi extends Atoum
                 ->isEmpty()
         ;
         
-        $this->assert('test BfwApi::obtainClassNameForCurrentRoute with a 200 route with get parameters')
+        $this->assert('test BfwApi::searchRoute with a 200 route with get parameters')
             ->if($this->calling($this->mock)->checkStatus = 200)
-            ->and($this->mock->getCtrlRouterInfos()->isFound = false)
+            ->and($ctrlRouterInfos->isFound = false)
             //->and($_SERVER['REQUEST_URI'] = '/books/{bookId:\d+}/comments/{commentId:\d+}')
             ->and($_SERVER['REQUEST_URI'] = '/api/books/123/comments/456')
             ->and($_SERVER['REQUEST_METHOD'] = 'GET')
             ->and(\BFW\Request::getInstance()->runDetect())
             ->then
-            ->string($this->mock->obtainClassNameForCurrentRoute())
+            ->variable($this->mock->searchRoute())
+                ->isNull()
+            ->string($ctrlRouterInfos->target)
                 ->isEqualTo('BooksComments')
             ->function('http_response_code')
                 ->wasCalledWithArguments(200)
@@ -418,9 +451,9 @@ class BfwApi extends Atoum
                 ])
         ;
         
-        $this->assert('test BfwApi::obtainClassNameForCurrentRoute with a 200 route with existing get parameters')
+        $this->assert('test BfwApi::searchRoute with a 200 route with existing get parameters')
             ->if($this->calling($this->mock)->checkStatus = 200)
-            ->and($this->mock->getCtrlRouterInfos()->isFound = false)
+            ->and($ctrlRouterInfos->isFound = false)
             //->and($_SERVER['REQUEST_URI'] = '/books/{bookId:\d+}/comments/{commentId:\d+}')
             ->and($_SERVER['REQUEST_URI'] = '/api/books/123/comments/456')
             ->and($_SERVER['REQUEST_METHOD'] = 'GET')
@@ -430,7 +463,9 @@ class BfwApi extends Atoum
                 'limit' => '20'
             ])
             ->then
-            ->string($this->mock->obtainClassNameForCurrentRoute())
+            ->variable($this->mock->searchRoute())
+                ->isNull()
+            ->string($ctrlRouterInfos->target)
                 ->isEqualTo('BooksComments')
             ->function('http_response_code')
                 ->wasCalledWithArguments(200)
@@ -445,15 +480,15 @@ class BfwApi extends Atoum
                 ])
         ;
         
-        $this->assert('test BfwApi::obtainClassNameForCurrentRoute with a 200 route without classname')
+        $this->assert('test BfwApi::searchRoute with a 200 route without classname')
             ->if($this->calling($this->mock)->checkStatus = 200)
-            ->and($this->mock->getCtrlRouterInfos()->isFound = false)
+            ->and($ctrlRouterInfos->isFound = false)
             ->and($_SERVER['REQUEST_URI'] = '/api/author')
             ->and($_SERVER['REQUEST_METHOD'] = 'GET')
             ->and(\BFW\Request::getInstance()->runDetect())
             ->then
             ->exception(function() {
-                $this->mock->obtainClassNameForCurrentRoute();
+                $this->mock->searchRoute();
             })
                 ->hasCode(\BfwApi\BfwApi::ERR_CLASSNAME_NOT_DEFINE_FOR_URI)
         ;
