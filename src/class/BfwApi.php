@@ -182,7 +182,7 @@ class BfwApi implements \SplObserver
                 ->attach($this)
             ;
         } elseif ($subject->getAction() === 'searchRoute') {
-            $this->ctrlRouterInfos = $subject->getContext();
+            $this->obtainCtrlRouterInfos($subject);
             
             if ($this->ctrlRouterInfos->isFound === false) {
                 $this->searchRoute();
@@ -195,6 +195,20 @@ class BfwApi implements \SplObserver
                 $this->execRoute();
             }
         }
+    }
+    
+    /**
+     * Set the property ctrlRouterInfos with the context object obtain linked
+     * to the subject.
+     * Allow override to get only some part. And used for unit test.
+     * 
+     * @param \BFW\Subject $subject
+     * 
+     * @return void
+     */
+    protected function obtainCtrlRouterInfos($subject)
+    {
+        $this->ctrlRouterInfos = $subject->getContext();
     }
     
     /**
