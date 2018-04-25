@@ -66,6 +66,12 @@ class BfwApi implements \SplObserver
     protected $ctrlRouterInfos;
     
     /**
+     * @var string $execRouteSystemName The name of the current system. Used on
+     * event "execRoute". Allow to extends this class in another module :)
+     */
+    protected $execRouteSystemName = 'bfw-api';
+    
+    /**
      * Constructor
      * 
      * @param \BFW\Module $module
@@ -119,6 +125,16 @@ class BfwApi implements \SplObserver
     public function getCtrlRouterInfos()
     {
         return $this->ctrlRouterInfos;
+    }
+    
+    /**
+     * Getter accessor for execRouteSystemName property
+     * 
+     * @return string
+     */
+    public function getExecRouteSystemName()
+    {
+        return $this->execRouteSystemName;
     }
     
     /**
