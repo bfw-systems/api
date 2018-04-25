@@ -212,6 +212,73 @@ class BfwApi implements \SplObserver
     }
     
     /**
+     * Obtain the classname to use for current route from fastRoute dispatcher
+     * 
+     * @return void
+     * 
+     * @throw \Exception If no "className" is define in config for the route.
+     */
+    protected function searchRoute()
+    {
+        //Get current request informations
+        $bfwRequest = \BFW\Request::getInstance();
+        $request    = $bfwRequest->getRequest()->path;
+        $method     = $bfwRequest->getMethod();
+
+        //Get route information from dispatcher
+        $routeInfo   = $this->dispatcher->dispatch($method, $request);
+        $routeStatus = $routeInfo[0];
+        
+        //Get and send request http status to the controller/router linker
+        $httpStatus = $this->checkStatus($routeStatus);
+        
+        if ($httpStatus === 404) {
+            //404 will be declared by \BFW\Application::runCtrlRouterLink()
+            return;
+        }
+        
+        http_response_code($httpStatus);
+        $this->ctrlRouterInfos->isFound = true;
+        $this->ctrlRouterInfos->forWho  = $this->execRouteSystemName;
+        
+        if ($httpStatus !== 200) {
+            return;
+        }
+
+        global $_GET;
+        $_GET = array_merge($_GET, $routeInfo[2]);
+        
+        if (!isset($routeInfo[1]['className'])) {
+            throw new Exception(
+                'className not define for uri '.$request,
+                self::ERR_CLASSNAME_NOT_DEFINE_FOR_URI
+            );
+        }
+        
+        $this->ctrlRouterInfos->target = $routeInfo[1]['className'];
+    }
+    
+    /**
+     * Get http status for response from dispatcher
+     * 
+     * @param int $routeStatus : Route status send by dispatcher for request
+     * 
+     * @return int
+     */
+    protected function checkStatus($routeStatus)
+    {
+        $httpStatus = 200;
+        
+        if ($routeStatus === \FastRoute\Dispatcher::METHOD_NOT_ALLOWED) {
+            $httpStatus = 405;
+        } elseif ($routeStatus === \FastRoute\Dispatcher::NOT_FOUND) {
+            $httpStatus = 404;
+        }
+        
+        return $httpStatus;
+    }
+    
+    /**
      * 
      * 
      * @return void
@@ -287,72 +354,5 @@ class BfwApi implements \SplObserver
     {
         //Not implement yet
         http_response_code(501);
-    }
-    
-    /**
-     * Obtain the classname to use for current route from fastRoute dispatcher
-     * 
-     * @return void
-     * 
-     * @throw \Exception If no "className" is define in config for the route.
-     */
-    protected function searchRoute()
-    {
-        //Get current request informations
-        $bfwRequest = \BFW\Request::getInstance();
-        $request    = $bfwRequest->getRequest()->path;
-        $method     = $bfwRequest->getMethod();
-
-        //Get route information from dispatcher
-        $routeInfo   = $this->dispatcher->dispatch($method, $request);
-        $routeStatus = $routeInfo[0];
-        
-        //Get and send request http status to the controller/router linker
-        $httpStatus = $this->checkStatus($routeStatus);
-        
-        if ($httpStatus === 404) {
-            //404 will be declared by \BFW\Application::runCtrlRouterLink()
-            return;
-        }
-        
-        http_response_code($httpStatus);
-        $this->ctrlRouterInfos->isFound = true;
-        $this->ctrlRouterInfos->forWho  = $this->execRouteSystemName;
-        
-        if ($httpStatus !== 200) {
-            return;
-        }
-
-        global $_GET;
-        $_GET = array_merge($_GET, $routeInfo[2]);
-        
-        if (!isset($routeInfo[1]['className'])) {
-            throw new Exception(
-                'className not define for uri '.$request,
-                self::ERR_CLASSNAME_NOT_DEFINE_FOR_URI
-            );
-        }
-        
-        $this->ctrlRouterInfos->target = $routeInfo[1]['className'];
-    }
-    
-    /**
-     * Get http status for response from dispatcher
-     * 
-     * @param int $routeStatus : Route status send by dispatcher for request
-     * 
-     * @return int
-     */
-    protected function checkStatus($routeStatus)
-    {
-        $httpStatus = 200;
-        
-        if ($routeStatus === \FastRoute\Dispatcher::METHOD_NOT_ALLOWED) {
-            $httpStatus = 405;
-        } elseif ($routeStatus === \FastRoute\Dispatcher::NOT_FOUND) {
-            $httpStatus = 404;
-        }
-        
-        return $httpStatus;
     }
 }

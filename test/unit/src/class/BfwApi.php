@@ -260,117 +260,6 @@ class BfwApi extends Atoum
         ;
     }
     
-    public function testExecRoute()
-    {
-        $this->assert('test BfwApi::execRoute - prepare for all case')
-            ->given($ctrlRouterInfos = $this->app->getCtrlRouterInfos())
-            ->given($subject = new \BFW\Test\Mock\Subject)
-            ->if($subject->setContext($ctrlRouterInfos))
-            ->and($this->mock->obtainCtrlRouterInfos($subject))
-        ;
-        
-        $this->assert('test BfwApi::execRoute without class found for route')
-            ->if($ctrlRouterInfos->target = null)
-            ->then
-            ->variable($this->mock->execRoute())
-                ->isNull()
-        ;
-        
-        $this->assert('test BfwApi::execRoute - prepare')
-            ->if($ctrlRouterInfos->target = '\BfwApi\Test\Helpers\Books')
-            ->and($this->calling($this->mock)->runRest = null)
-            ->and($this->calling($this->mock)->runGraphQL = null)
-            ->and($_SERVER['REQUEST_METHOD'] = 'GET')
-            ->and(\BFW\Request::getInstance()->runDetect())
-        ;
-        
-        $this->assert('test BfwApi::execRoute with non existing class')
-            ->if($this->function->class_exists = false)
-            ->then
-            ->exception(function() {
-                $this->mock->execRoute();
-            })
-                ->hasCode(\BfwApi\BfwApi::ERR_RUN_CLASS_NOT_FOUND)
-        ;
-        
-        $this->assert('test BfwApi::execRoute with non existing class')
-            ->and($this->function->class_exists = true)
-            ->and($this->function->method_exists = false)
-            ->then
-            ->exception(function() {
-                $this->mock->execRoute();
-            })
-                ->hasCode(\BfwApi\BfwApi::ERR_RUN_METHOD_NOT_FOUND)
-        ;
-        
-        $this->assert('test BfwApi::execRoute with no mode declared')
-            ->if($this->function->class_exists = true)
-            ->and($this->function->method_exists = true)
-            ->then
-            ->if($this->module->getConfig()->setConfigKeyForFile('config.php', 'useRest', false))
-            ->and($this->module->getConfig()->setConfigKeyForFile('config.php', 'useGraphQL', false))
-            ->then
-            ->exception(function() {
-                $this->mock->execRoute();
-            })
-                ->hasCode(\BfwApi\BfwApi::ERR_RUN_MODE_NOT_DECLARED)
-        ;
-        
-        $this->assert('test BfwApi::execRoute with rest mode')
-            ->if($this->module->getConfig()->setConfigKeyForFile('config.php', 'useRest', true))
-            ->and($this->module->getConfig()->setConfigKeyForFile('config.php', 'useGraphQL', false))
-            ->then
-            ->variable($this->mock->execRoute())
-                ->isNull()
-            ->mock($this->mock)
-                ->call('runRest')
-                    ->withArguments('\BfwApi\Test\Helpers\Books', 'get')
-                    ->once()
-        ;
-        
-        $this->assert('test BfwApi::execRoute with graphQL mode')
-            ->if($this->module->getConfig()->setConfigKeyForFile('config.php', 'useRest', false))
-            ->and($this->module->getConfig()->setConfigKeyForFile('config.php', 'useGraphQL', true))
-            ->then
-            ->variable($this->mock->execRoute())
-                ->isNull()
-            ->mock($this->mock)
-                ->call('runGraphQL')
-                    ->withoutAnyArgument()
-                    ->once()
-        ;
-    }
-    
-    public function testRunRest()
-    {
-        $this->assert('test BfwApi::runRest with implemented method')
-            ->output(function() {
-                $this->mock->runRest('\BfwApi\Test\Helpers\Books', 'get');
-            })
-                ->isEqualTo('List of all books.')
-        ;
-        
-        $this->assert('test BfwApi::runRest without implemented class')
-            ->exception(function() {
-                $this->mock->runRest('\BfwApi\Test\Helpers\Editors', 'get');
-            })
-                ->hasCode(\BfwApi\BfwApi::ERR_RUN_REST_NOT_IMPLEMENT_INTERFACE)
-        ;
-    }
-    
-    public function testRunGraphQL()
-    {
-        $this->assert('test BfwApi::runGraphQL')
-            ->if($this->function->http_response_code = null)
-            ->then
-            ->variable($this->mock->runGraphQL())
-                ->isNull()
-            ->function('http_response_code')
-                ->wasCalledWithArguments(501)
-                    ->atLeastOnce()
-        ;
-    }
-    
     public function testSearchRoute()
     {
         $this->assert('test BfwApi::searchRoute - prepare')
@@ -509,6 +398,117 @@ class BfwApi extends Atoum
         $this->assert('test BfwApi::checkStatus with method not allowed for the route')
             ->integer($this->mock->checkStatus(\FastRoute\Dispatcher::METHOD_NOT_ALLOWED))
                 ->isEqualTo(405)
+        ;
+    }
+    
+    public function testExecRoute()
+    {
+        $this->assert('test BfwApi::execRoute - prepare for all case')
+            ->given($ctrlRouterInfos = $this->app->getCtrlRouterInfos())
+            ->given($subject = new \BFW\Test\Mock\Subject)
+            ->if($subject->setContext($ctrlRouterInfos))
+            ->and($this->mock->obtainCtrlRouterInfos($subject))
+        ;
+        
+        $this->assert('test BfwApi::execRoute without class found for route')
+            ->if($ctrlRouterInfos->target = null)
+            ->then
+            ->variable($this->mock->execRoute())
+                ->isNull()
+        ;
+        
+        $this->assert('test BfwApi::execRoute - prepare')
+            ->if($ctrlRouterInfos->target = '\BfwApi\Test\Helpers\Books')
+            ->and($this->calling($this->mock)->runRest = null)
+            ->and($this->calling($this->mock)->runGraphQL = null)
+            ->and($_SERVER['REQUEST_METHOD'] = 'GET')
+            ->and(\BFW\Request::getInstance()->runDetect())
+        ;
+        
+        $this->assert('test BfwApi::execRoute with non existing class')
+            ->if($this->function->class_exists = false)
+            ->then
+            ->exception(function() {
+                $this->mock->execRoute();
+            })
+                ->hasCode(\BfwApi\BfwApi::ERR_RUN_CLASS_NOT_FOUND)
+        ;
+        
+        $this->assert('test BfwApi::execRoute with non existing class')
+            ->and($this->function->class_exists = true)
+            ->and($this->function->method_exists = false)
+            ->then
+            ->exception(function() {
+                $this->mock->execRoute();
+            })
+                ->hasCode(\BfwApi\BfwApi::ERR_RUN_METHOD_NOT_FOUND)
+        ;
+        
+        $this->assert('test BfwApi::execRoute with no mode declared')
+            ->if($this->function->class_exists = true)
+            ->and($this->function->method_exists = true)
+            ->then
+            ->if($this->module->getConfig()->setConfigKeyForFile('config.php', 'useRest', false))
+            ->and($this->module->getConfig()->setConfigKeyForFile('config.php', 'useGraphQL', false))
+            ->then
+            ->exception(function() {
+                $this->mock->execRoute();
+            })
+                ->hasCode(\BfwApi\BfwApi::ERR_RUN_MODE_NOT_DECLARED)
+        ;
+        
+        $this->assert('test BfwApi::execRoute with rest mode')
+            ->if($this->module->getConfig()->setConfigKeyForFile('config.php', 'useRest', true))
+            ->and($this->module->getConfig()->setConfigKeyForFile('config.php', 'useGraphQL', false))
+            ->then
+            ->variable($this->mock->execRoute())
+                ->isNull()
+            ->mock($this->mock)
+                ->call('runRest')
+                    ->withArguments('\BfwApi\Test\Helpers\Books', 'get')
+                    ->once()
+        ;
+        
+        $this->assert('test BfwApi::execRoute with graphQL mode')
+            ->if($this->module->getConfig()->setConfigKeyForFile('config.php', 'useRest', false))
+            ->and($this->module->getConfig()->setConfigKeyForFile('config.php', 'useGraphQL', true))
+            ->then
+            ->variable($this->mock->execRoute())
+                ->isNull()
+            ->mock($this->mock)
+                ->call('runGraphQL')
+                    ->withoutAnyArgument()
+                    ->once()
+        ;
+    }
+    
+    public function testRunRest()
+    {
+        $this->assert('test BfwApi::runRest with implemented method')
+            ->output(function() {
+                $this->mock->runRest('\BfwApi\Test\Helpers\Books', 'get');
+            })
+                ->isEqualTo('List of all books.')
+        ;
+        
+        $this->assert('test BfwApi::runRest without implemented class')
+            ->exception(function() {
+                $this->mock->runRest('\BfwApi\Test\Helpers\Editors', 'get');
+            })
+                ->hasCode(\BfwApi\BfwApi::ERR_RUN_REST_NOT_IMPLEMENT_INTERFACE)
+        ;
+    }
+    
+    public function testRunGraphQL()
+    {
+        $this->assert('test BfwApi::runGraphQL')
+            ->if($this->function->http_response_code = null)
+            ->then
+            ->variable($this->mock->runGraphQL())
+                ->isNull()
+            ->function('http_response_code')
+                ->wasCalledWithArguments(501)
+                    ->atLeastOnce()
         ;
     }
 }
