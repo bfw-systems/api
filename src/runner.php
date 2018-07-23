@@ -1,5 +1,11 @@
 <?php
 
+$this->monolog = new \BFW\Monolog(
+    'bfw-api',
+    \BFW\Application::getInstance()->getConfig()
+);
+$this->monolog->addAllHandlers();
+
 $bfwApi = new \BfwApi\BfwApi($this);
 
 $app        = \BFW\Application::getInstance();

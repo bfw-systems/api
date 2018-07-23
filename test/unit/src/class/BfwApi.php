@@ -13,9 +13,9 @@ require_once($vendorPath.'/bulton-fr/bfw/test/unit/mocks/src/class/Subject.php')
 class BfwApi extends Atoum
 {
     use \BFW\Test\Helpers\Application;
+    use \BfwApi\Test\Helpers\Module;
     
     protected $mock;
-    protected $module;
     
     public function beforeTestMethod($testMethod)
     {
@@ -30,8 +30,8 @@ class BfwApi extends Atoum
             [$this->app, 'runCtrlRouterLink']
         ]);
         $this->initApp();
-        $this->createModule();
         $this->app->run();
+        $this->createModule();
         
         if ($testMethod === 'testConstructAndGetters') {
             return;
@@ -47,57 +47,6 @@ class BfwApi extends Atoum
             ->generate('BfwApi\BfwApi')
         ;
         $this->mock = new \mock\BfwApi\BfwApi($this->module);
-    }
-    
-    protected function createModule()
-    {
-        $this->module = new \BFW\Test\Mock\Module('bfw-api');
-        $config = new \BFW\Config('bfw-api');
-        $this->module->setConfig($config);
-        $this->module->setStatus(true, true);
-        
-        $config->setConfigForFile(
-            'config.php',
-            (object) [
-                'urlPrefix'  =>  '/api',
-                'useRest'    => true,
-                'useGraphQL' => false
-            ]
-        );
-        
-        $config->setConfigForFile(
-            'routes.php',
-            (object) [
-                'routes' =>  [
-                    '/books' => [
-                        'className'  => '\BfwApi\test\unit\mocks\Books',
-                        'httpMethod' => ['GET']
-                    ],
-                    '/books/{bookId:\d+}' => [
-                        'className' => 'Books'
-                    ],
-                    '/books/{bookId:\d+}/comments' => [
-                        'className'  => 'BooksComments',
-                        'httpMethod' => ['GET', 'POST']
-                    ],
-                    '/books/{bookId:\d+}/comments/{commentId:\d+}' => [
-                        'className'  => 'BooksComments',
-                        'httpMethod' => ['GET']
-                    ],
-                    '/author' => [
-                        'httpMethod' => ['GET']
-                    ],
-                    '/editors' => [
-                        'className'  => '\BfwApi\test\unit\mocks\Editors',
-                        'httpMethod' => ['GET']
-                    ],
-                    '/libraries' => [
-                        'className'  => '\BfwApi\test\unit\mocks\Libraries',
-                        'httpMethod' => ['GET']
-                    ]
-                ]
-            ]
-        );
     }
     
     public function testConstructAndGetters()

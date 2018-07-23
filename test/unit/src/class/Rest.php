@@ -13,6 +13,7 @@ require_once($vendorPath.'/bulton-fr/bfw/test/unit/mocks/src/class/Subject.php')
 class Rest extends Atoum
 {
     use \BFW\Test\Helpers\Application;
+    use \BfwApi\Test\Helpers\Module;
     
     protected $mock;
     protected $module;
@@ -22,6 +23,7 @@ class Rest extends Atoum
         $this->setRootDir(__DIR__.'/../../../..');
         $this->createApp();
         $this->initApp();
+        $this->createModule();
         
         if ($testMethod === 'testConstructAndGetters') {
             return;

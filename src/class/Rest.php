@@ -112,6 +112,13 @@ abstract class Rest implements RestInterface
         try {
             $contentType = \BFW\Request::getServerValue('CONTENT_TYPE');
         } catch (Exception $e) {
+            \BFW\Application::getInstance()
+                ->getModuleForName('bfw-api')
+                ->monolog
+                ->getLogger()
+                ->debug('No CONTENT_TYPE declared, so data is an empty array.')
+            ;
+            
             $this->datas = [];
             return;
         }
