@@ -16,7 +16,6 @@ class Rest extends Atoum
     use \BfwApi\Test\Helpers\Module;
     
     protected $mock;
-    protected $module;
     
     public function beforeTestMethod($testMethod)
     {
