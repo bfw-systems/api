@@ -175,7 +175,7 @@ class BfwApi extends Atoum
         
         $this->assert('test BfwApi::update for searchRoute system')
             ->given($subject = new \BFW\Test\Mock\Subject)
-            ->and($subject->setAction('searchRoute'))
+            ->and($subject->setAction('ctrlRouterLink_exec_searchRoute'))
             ->and($subject->setContext($this->app->getCtrlRouterInfos()))
             ->then
             ->if($this->calling($this->mock)->searchRoute = null)
@@ -194,7 +194,7 @@ class BfwApi extends Atoum
             ->if($ctrlRouterInfos->isFound = true)
             ->if($ctrlRouterInfos->forWho = $this->mock->getExecRouteSystemName())
             ->given($subject = new \BFW\Test\Mock\Subject)
-            ->and($subject->setAction('execRoute'))
+            ->and($subject->setAction('ctrlRouterLink_exec_execRoute'))
             ->and($subject->setContext($ctrlRouterInfos))
             ->then
             ->if($this->calling($this->mock)->execRoute = null)

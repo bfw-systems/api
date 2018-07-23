@@ -186,13 +186,13 @@ class BfwApi implements \SplObserver
                 ->getSubjectForName('ctrlRouterLink')
                 ->attach($this)
             ;
-        } elseif ($subject->getAction() === 'searchRoute') {
+        } elseif ($subject->getAction() === 'ctrlRouterLink_exec_searchRoute') {
             $this->obtainCtrlRouterInfos($subject);
             
             if ($this->ctrlRouterInfos->isFound === false) {
                 $this->searchRoute();
             }
-        } elseif ($subject->getAction() === 'execRoute') {
+        } elseif ($subject->getAction() === 'ctrlRouterLink_exec_execRoute') {
             if (
                 $this->ctrlRouterInfos->isFound === true &&
                 $this->ctrlRouterInfos->forWho === $this->execRouteSystemName
