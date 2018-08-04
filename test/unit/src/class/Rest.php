@@ -21,7 +21,9 @@ class Rest extends Atoum
     {
         $this->setRootDir(__DIR__.'/../../../..');
         $this->createApp();
+        $this->disableSomeCoreSystem();
         $this->initApp();
+        $this->removeLoadModules();
         $this->createModule();
         
         if ($testMethod === 'testConstructAndGetters') {

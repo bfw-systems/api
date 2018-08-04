@@ -25,13 +25,11 @@ class BfwApi extends Atoum
         
         $this->setRootDir(__DIR__.'/../../../..');
         $this->createApp();
-        $this->app->setRunSteps([
-            [$this->app, 'initCtrlRouterLink'],
-            [$this->app, 'runCtrlRouterLink']
-        ]);
+        $this->disableSomeCoreSystem();
         $this->initApp();
-        $this->app->run();
+        $this->removeLoadModules();
         $this->createModule();
+        $this->app->run();
         
         if ($testMethod === 'testConstructAndGetters') {
             return;
@@ -162,35 +160,28 @@ class BfwApi extends Atoum
     
     public function testUpdate()
     {
-        $this->assert('test BfwApi::update for adding to linker subject')
+        $this->assert('test BfwApi::update - prepare')
             ->given($subject = new \BFW\Test\Mock\Subject)
-            ->and($subject->setAction('bfw_ctrlRouterLink_subject_added'))
-            ->then
-            ->variable($this->mock->update($subject))
-                ->isNull()
-            ->given($subjectList = \BFW\Application::getInstance()->getSubjectList())
-            ->array($observers = $subjectList->getSubjectForName('ctrlRouterLink')->getObservers())
-                ->contains($this->mock)
         ;
         
         $this->assert('test BfwApi::update for searchRoute system')
             ->given($subject = new \BFW\Test\Mock\Subject)
             ->and($subject->setAction('ctrlRouterLink_exec_searchRoute'))
-            ->and($subject->setContext($this->app->getCtrlRouterInfos()))
+            ->and($subject->setContext($this->app->getCtrlRouterLink()))
             ->then
             ->if($this->calling($this->mock)->searchRoute = null)
             ->then
             ->variable($this->mock->update($subject))
                 ->isNull()
             ->object($this->mock->getCtrlRouterInfos())
-                ->isIdenticalTo($this->app->getCtrlRouterInfos())
+                ->isIdenticalTo($this->app->getCtrlRouterLink())
             ->mock($this->mock)
                 ->call('searchRoute')
                     ->once()
         ;
         
         $this->assert('test BfwApi::update for searchRoute system')
-            ->given($ctrlRouterInfos = $this->app->getCtrlRouterInfos())
+            ->given($ctrlRouterInfos = $this->app->getCtrlRouterLink())
             ->if($ctrlRouterInfos->isFound = true)
             ->if($ctrlRouterInfos->forWho = $this->mock->getExecRouteSystemName())
             ->given($subject = new \BFW\Test\Mock\Subject)
@@ -202,7 +193,7 @@ class BfwApi extends Atoum
             ->variable($this->mock->update($subject))
                 ->isNull()
             ->object($this->mock->getCtrlRouterInfos())
-                ->isIdenticalTo($this->app->getCtrlRouterInfos())
+                ->isIdenticalTo($this->app->getCtrlRouterLink())
             ->mock($this->mock)
                 ->call('execRoute')
                     ->once()
@@ -217,7 +208,7 @@ class BfwApi extends Atoum
             ->and($_SERVER['REQUEST_METHOD'] = 'GET')
             ->and(\BFW\Request::getInstance()->runDetect())
             ->then
-            ->given($ctrlRouterInfos = $this->app->getCtrlRouterInfos())
+            ->given($ctrlRouterInfos = $this->app->getCtrlRouterLink())
             ->given($subject = new \BFW\Test\Mock\Subject)
             ->if($subject->setContext($ctrlRouterInfos))
             ->and($this->mock->obtainCtrlRouterInfos($subject))
@@ -353,7 +344,7 @@ class BfwApi extends Atoum
     public function testExecRoute()
     {
         $this->assert('test BfwApi::execRoute - prepare for all case')
-            ->given($ctrlRouterInfos = $this->app->getCtrlRouterInfos())
+            ->given($ctrlRouterInfos = $this->app->getCtrlRouterLink())
             ->given($subject = new \BFW\Test\Mock\Subject)
             ->if($subject->setContext($ctrlRouterInfos))
             ->and($this->mock->obtainCtrlRouterInfos($subject))
@@ -397,8 +388,8 @@ class BfwApi extends Atoum
             ->if($this->function->class_exists = true)
             ->and($this->function->method_exists = true)
             ->then
-            ->if($this->module->getConfig()->setConfigKeyForFile('config.php', 'useRest', false))
-            ->and($this->module->getConfig()->setConfigKeyForFile('config.php', 'useGraphQL', false))
+            ->if($this->module->getConfig()->setConfigKeyForFilename('config.php', 'useRest', false))
+            ->and($this->module->getConfig()->setConfigKeyForFilename('config.php', 'useGraphQL', false))
             ->then
             ->exception(function() {
                 $this->mock->execRoute();
@@ -407,8 +398,8 @@ class BfwApi extends Atoum
         ;
         
         $this->assert('test BfwApi::execRoute with rest mode')
-            ->if($this->module->getConfig()->setConfigKeyForFile('config.php', 'useRest', true))
-            ->and($this->module->getConfig()->setConfigKeyForFile('config.php', 'useGraphQL', false))
+            ->if($this->module->getConfig()->setConfigKeyForFilename('config.php', 'useRest', true))
+            ->and($this->module->getConfig()->setConfigKeyForFilename('config.php', 'useGraphQL', false))
             ->then
             ->variable($this->mock->execRoute())
                 ->isNull()
@@ -419,8 +410,8 @@ class BfwApi extends Atoum
         ;
         
         $this->assert('test BfwApi::execRoute with graphQL mode')
-            ->if($this->module->getConfig()->setConfigKeyForFile('config.php', 'useRest', false))
-            ->and($this->module->getConfig()->setConfigKeyForFile('config.php', 'useGraphQL', true))
+            ->if($this->module->getConfig()->setConfigKeyForFilename('config.php', 'useRest', false))
+            ->and($this->module->getConfig()->setConfigKeyForFilename('config.php', 'useGraphQL', true))
             ->then
             ->variable($this->mock->execRoute())
                 ->isNull()

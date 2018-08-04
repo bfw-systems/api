@@ -6,6 +6,21 @@ trait Module
 {
     protected $module;
     
+    protected function disableSomeCoreSystem()
+    {
+        $coreSystemList = $this->app->getCoreSystemList();
+        unset($coreSystemList['cli']);
+        $this->app->setCoreSystemList($coreSystemList);
+    }
+    
+    protected function removeLoadModules()
+    {
+        $runTasks = $this->app->getRunTasks();
+        $allSteps = $runTasks->getRunSteps();
+        unset($allSteps['moduleList']);
+        $runTasks->setRunSteps($allSteps);
+    }
+    
     protected function createModule()
     {
         $config     = new \BFW\Config('bfw-api');
@@ -13,7 +28,7 @@ trait Module
         $moduleList->setModuleConfig('bfw-api', $config);
         $moduleList->addModule('bfw-api');
         
-        $this->module = $this->app->getModuleForName('bfw-api');
+        $this->module = $moduleList->getModuleByName('bfw-api');
         
         $this->module->monolog = new \BFW\Monolog(
             'bfw-api',
@@ -21,7 +36,7 @@ trait Module
         );
         $this->module->monolog->addAllHandlers();
         
-        $config->setConfigForFile(
+        $config->setConfigForFilename(
             'config.php',
             (object) [
                 'urlPrefix'  =>  '/api',
@@ -30,7 +45,7 @@ trait Module
             ]
         );
         
-        $config->setConfigForFile(
+        $config->setConfigForFilename(
             'routes.php',
             (object) [
                 'routes' =>  [

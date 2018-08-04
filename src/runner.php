@@ -9,7 +9,7 @@ $this->monolog->addAllHandlers();
 $bfwApi = new \BfwApi\BfwApi($this);
 
 $app        = \BFW\Application::getInstance();
-$appSubject = $app->getSubjectList()->getSubjectForName('ApplicationTasks');
+$appSubject = $app->getSubjectList()->getSubjectByName('ctrlRouterLink');
 $appSubject->attach($bfwApi);
 
 \BFW\Helpers\Constants::create('API_DIR', SRC_DIR.'api/');
