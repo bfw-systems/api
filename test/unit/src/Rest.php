@@ -4,7 +4,7 @@ namespace BfwApi\test\unit;
 
 use \atoum;
 
-$vendorPath = realpath(__DIR__.'/../../../../vendor');
+$vendorPath = realpath(__DIR__.'/../../../vendor');
 require_once($vendorPath.'/autoload.php');
 require_once($vendorPath.'/bulton-fr/bfw/test/unit/helpers/Application.php');
 require_once($vendorPath.'/bulton-fr/bfw/test/unit/mocks/src/Module.php');
@@ -19,7 +19,7 @@ class Rest extends atoum
     
     public function beforeTestMethod($testMethod)
     {
-        $this->setRootDir(__DIR__.'/../../../..');
+        $this->setRootDir(__DIR__.'/../../..');
         $this->createApp();
         $this->disableSomeCoreSystem();
         $this->initApp();
