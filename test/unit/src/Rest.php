@@ -145,8 +145,8 @@ class Rest extends atoum
             ->then
             ->variable($this->mock->obtainResponseFormat())
                 ->isNull()
-            ->variable($this->mock->getResponseFormat())
-                ->isNull()
+            ->string($this->mock->getResponseFormat())
+                ->isEmpty()
             ->function('http_response_code')
                 ->wasCalledWithArguments(406)
                     ->once()

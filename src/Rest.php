@@ -24,7 +24,7 @@ abstract class Rest implements RestInterface
     /**
      * @var string $responseFormat (json|xml) The response format to use
      */
-    protected $responseFormat;
+    protected $responseFormat = '';
     
     /**
      * Constructor
@@ -39,7 +39,7 @@ abstract class Rest implements RestInterface
     /**
      * Getter accessor for datas property
      * 
-     * @return miex
+     * @return mixed
      */
     public function getDatas()
     {
@@ -51,7 +51,7 @@ abstract class Rest implements RestInterface
      * 
      * @return string
      */
-    public function getResponseFormat()
+    public function getResponseFormat(): string
     {
         return $this->responseFormat;
     }

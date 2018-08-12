@@ -92,7 +92,7 @@ class BfwApi implements \SplObserver
      * 
      * @return \BFW\Module
      */
-    public function getModule()
+    public function getModule(): \BFW\Module
     {
         return $this->module;
     }
@@ -102,7 +102,7 @@ class BfwApi implements \SplObserver
      * 
      * @return \BFW\Config
      */
-    public function getConfig()
+    public function getConfig(): \BFW\Config
     {
         return $this->config;
     }
@@ -112,7 +112,7 @@ class BfwApi implements \SplObserver
      * 
      * @return \FastRoute\Dispatcher
      */
-    public function getDispatcher()
+    public function getDispatcher(): \FastRoute\Dispatcher
     {
         return $this->dispatcher;
     }
@@ -120,7 +120,7 @@ class BfwApi implements \SplObserver
     /**
      * Getter accessor for ctrlRouterInfos property
      * 
-     * @return \stdClass
+     * @return object
      */
     public function getCtrlRouterInfos()
     {
@@ -132,7 +132,7 @@ class BfwApi implements \SplObserver
      * 
      * @return string
      */
-    public function getExecRouteSystemName()
+    public function getExecRouteSystemName(): string
     {
         return $this->execRouteSystemName;
     }
@@ -202,7 +202,7 @@ class BfwApi implements \SplObserver
      * 
      * @return void
      */
-    protected function obtainCtrlRouterInfos($subject)
+    protected function obtainCtrlRouterInfos(\BFW\Subject $subject)
     {
         $this->ctrlRouterInfos = $subject->getContext();
     }
@@ -273,7 +273,7 @@ class BfwApi implements \SplObserver
      * 
      * @return int
      */
-    protected function checkStatus($routeStatus)
+    protected function checkStatus(int $routeStatus): int
     {
         $httpStatus = 200;
         
@@ -287,7 +287,7 @@ class BfwApi implements \SplObserver
     }
     
     /**
-     * 
+     * Execute the asked route
      * 
      * @return void
      */
@@ -348,7 +348,7 @@ class BfwApi implements \SplObserver
      * 
      * @return void
      */
-    protected function runRest($className, $method)
+    protected function runRest(string $className, string $method)
     {
         $this->module->monolog->getLogger()->debug('Use REST system.');
         
