@@ -15,7 +15,7 @@
  * 
  * Exemple if target contains php file to call
  *
- * return (object) [
+ * return [
  *     'routes' => [
  *         '/books' => [
  *             'className'  => 'Books',
@@ -36,6 +36,6 @@
  * ];
  */
 
-return (object) [
+return [
     'routes' => []
 ];

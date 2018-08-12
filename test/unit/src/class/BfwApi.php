@@ -7,10 +7,10 @@ use \atoum;
 $vendorPath = realpath(__DIR__.'/../../../../vendor');
 require_once($vendorPath.'/autoload.php');
 require_once($vendorPath.'/bulton-fr/bfw/test/unit/helpers/Application.php');
-require_once($vendorPath.'/bulton-fr/bfw/test/unit/mocks/src/class/Module.php');
-require_once($vendorPath.'/bulton-fr/bfw/test/unit/mocks/src/class/Subject.php');
+require_once($vendorPath.'/bulton-fr/bfw/test/unit/mocks/src/Module.php');
+require_once($vendorPath.'/bulton-fr/bfw/test/unit/mocks/src/Subject.php');
 
-class BfwApi extends Atoum
+class BfwApi extends atoum
 {
     use \BFW\Test\Helpers\Application;
     use \BfwApi\Test\Helpers\Module;

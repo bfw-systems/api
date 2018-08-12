@@ -8,7 +8,7 @@
  * @version 2.0
  */
 
-return (object) [
+return [
     'routes' => [
         '/books' => [
             'className'  => '\BfwApi\test\run\Books',

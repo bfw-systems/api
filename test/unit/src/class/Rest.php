@@ -7,10 +7,10 @@ use \atoum;
 $vendorPath = realpath(__DIR__.'/../../../../vendor');
 require_once($vendorPath.'/autoload.php');
 require_once($vendorPath.'/bulton-fr/bfw/test/unit/helpers/Application.php');
-require_once($vendorPath.'/bulton-fr/bfw/test/unit/mocks/src/class/Module.php');
-require_once($vendorPath.'/bulton-fr/bfw/test/unit/mocks/src/class/Subject.php');
+require_once($vendorPath.'/bulton-fr/bfw/test/unit/mocks/src/Module.php');
+require_once($vendorPath.'/bulton-fr/bfw/test/unit/mocks/src/Subject.php');
 
-class Rest extends Atoum
+class Rest extends atoum
 {
     use \BFW\Test\Helpers\Application;
     use \BfwApi\Test\Helpers\Module;
@@ -306,7 +306,7 @@ class Rest extends Atoum
             ->if($this->function->header = null)
             ->then
             ->output(function() {
-                $response = (object) [];
+                $response = new class {};
                 $this->mock->sendJsonResponse($response);
             })
                 ->isEqualTo('{}')
@@ -322,7 +322,7 @@ class Rest extends Atoum
             ->if($this->function->header = null)
             ->then
             ->output(function() {
-                $response = (object) [];
+                $response = new class {};
                 $this->mock->sendXmlResponse($response);
             })
                 ->isEqualTo('<?xml version="1.0" encoding="UTF-8"?>'."\n")

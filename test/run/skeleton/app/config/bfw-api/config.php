@@ -6,7 +6,7 @@
  * @version 2.0
  */
 
-return (object) [
+return [
     /**
      * @var string $urlPrefix : Prefix url to use for all api url
      * @example '/api' for have an api url /api/books/

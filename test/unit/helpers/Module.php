@@ -38,7 +38,7 @@ trait Module
         
         $config->setConfigForFilename(
             'config.php',
-            (object) [
+            [
                 'urlPrefix'  =>  '/api',
                 'useRest'    => true,
                 'useGraphQL' => false
@@ -47,7 +47,7 @@ trait Module
         
         $config->setConfigForFilename(
             'routes.php',
-            (object) [
+            [
                 'routes' =>  [
                     '/books' => [
                         'className'  => '\BfwApi\test\unit\mocks\Books',
