@@ -2,6 +2,9 @@
 
 namespace BfwApi\Test\Helpers;
 
+$vendorPath = realpath(__DIR__.'/../../../vendor');
+require_once($vendorPath.'/bulton-fr/bfw/test/unit/mocks/src/Module.php');
+
 trait Module
 {
     protected $module;
