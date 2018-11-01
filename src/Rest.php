@@ -126,13 +126,13 @@ abstract class Rest implements RestInterface
         
         if ($contentType === 'application/json') {
             $requestDatas = file_get_contents('php://input');
-            $this->datas  = Secure::securise(
+            $this->datas  = Secure::secureData(
                 json_decode($requestDatas, true),
                 'string',
                 true
             );
         } else {
-            $this->datas = Secure::securise($_POST, 'string', true);
+            $this->datas = Secure::secureData($_POST, 'string', true);
         }
     }
     
