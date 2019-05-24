@@ -1,10 +1,10 @@
 <?php
 
 //Create src/api directory
-echo ' >> Create src/api directory ... ';
+echo "\n".' >> Create src/api directory ... ';
 
 if (file_exists(SRC_DIR.'api/')) {
-    echo "\033[1;33mAlready exist.\033[0m";
+    echo "\033[1;33mAlready exist.\033[0m\n";
     return;
 }
     

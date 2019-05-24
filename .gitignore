@@ -1,1 +1,3 @@
-/.project
+test/run/install/
+vendor/
+composer.lock

@@ -15,7 +15,8 @@ php composer.phar install
 
 echo '\033[0;33mBFW Install and module\033[0m'
 ./vendor/bin/bfwInstall
-./vendor/bin/bfwInstallModules
+./vendor/bin/bfwAddMod -a
+./vendor/bin/bfwEnMod -a
 
 echo -n '\033[0;33mCheck module installed script has been executed ... \033[0m'
 if [ ! -d "$DIRECTORY" ]; then
